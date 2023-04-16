@@ -10,7 +10,7 @@ import java.security.*;
 import java.util.Base64;
 import java.util.HashMap;
 
-import static nl.martijndwars.webpush.Encoding.AES128GCM;
+import static nl.martijndwars.webpush.Encoding.AES_128_GCM;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 class HttpEceTest {
@@ -29,7 +29,7 @@ class HttpEceTest {
         String plaintext = "Hello";
         byte[] salt = new byte[16];
         byte[] key = new byte[16];
-        byte[] actual = httpEce.encrypt(plaintext.getBytes(), salt, key, null, null, null, AES128GCM);
+        byte[] actual = httpEce.encrypt(plaintext.getBytes(), salt, key, null, null, null, AES_128_GCM);
         byte[] expected = decode("AAAAAAAAAAAAAAAAAAAAAAAAEAAAMpsi6NfZUkOdJI96XyX0tavLqyIdiw");
 
         assertArrayEquals(expected, actual);
@@ -50,7 +50,7 @@ class HttpEceTest {
         byte[] plaintext = "I am the walrus".getBytes();
         byte[] salt = decode("I1BsxtFttlv3u_Oo94xnmw");
         byte[] key = decode("yqdlZ-tYemfogSmv7Ws5PQ");
-        byte[] actual = httpEce.encrypt(plaintext, salt, key, null, null, null, AES128GCM);
+        byte[] actual = httpEce.encrypt(plaintext, salt, key, null, null, null, AES_128_GCM);
         byte[] expected = decode("I1BsxtFttlv3u_Oo94xnmwAAEAAA-NAVub2qFgBEuQKRapoZu-IxkIva3MEB1PD-ly8Thjg");
 
         assertArrayEquals(expected, actual);
@@ -78,8 +78,8 @@ class HttpEceTest {
         byte[] plaintext = "I am the walrus".getBytes();
         byte[] salt = decode(encodedSalt);
         byte[] key = decode(encodedKey);
-        byte[] ciphertext = httpEce.encrypt(plaintext, salt, key, null, null, null, AES128GCM);
-        byte[] decrypted = httpEce.decrypt(ciphertext, null, key, null, AES128GCM);
+        byte[] ciphertext = httpEce.encrypt(plaintext, salt, key, null, null, null, AES_128_GCM);
+        byte[] decrypted = httpEce.decrypt(ciphertext, null, key, null, AES_128_GCM);
 
         assertArrayEquals(plaintext, decrypted);
     }
@@ -99,7 +99,7 @@ class HttpEceTest {
         byte[] plaintext = "I am the walrus".getBytes();
         byte[] salt = decode("uNCkWiNYzKTnBN9ji3-qWA");
         byte[] key = decode("BO3ZVPxUlnLORbVGMpbT1Q");
-        byte[] actual = httpEce.encrypt(plaintext, salt, key, null, null, null, AES128GCM);
+        byte[] actual = httpEce.encrypt(plaintext, salt, key, null, null, null, AES_128_GCM);
         byte[] expected = decode("uNCkWiNYzKTnBN9ji3-qWAAAABkCYTHOG8chz_gnvgOqdGYovxyjuqRyJFjEDyoF1Fvkj6hQPdPHI51OEUKEpgz3SsLWIqS_uA");
 
         assertArrayEquals(expected, actual);

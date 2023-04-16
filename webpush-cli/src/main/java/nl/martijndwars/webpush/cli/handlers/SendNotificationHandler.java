@@ -1,12 +1,15 @@
 package nl.martijndwars.webpush.cli.handlers;
 
+import java.net.http.HttpClient;
+import java.net.http.HttpResponse;
+
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription;
 import nl.martijndwars.webpush.cli.commands.SendNotificationCommand;
-import org.apache.http.HttpResponse;
 
 public class SendNotificationHandler implements HandlerInterface {
+
     private SendNotificationCommand sendNotificationCommand;
 
     public SendNotificationHandler(SendNotificationCommand sendNotificationCommand) {
@@ -15,7 +18,7 @@ public class SendNotificationHandler implements HandlerInterface {
 
     @Override
     public void run() throws Exception {
-        PushService pushService = new PushService()
+        PushService pushService = new PushService(HttpClient.newHttpClient())
             .setPublicKey(sendNotificationCommand.getPublicKey())
             .setPrivateKey(sendNotificationCommand.getPrivateKey())
             .setSubject("mailto:admin@domain.com");
@@ -24,7 +27,7 @@ public class SendNotificationHandler implements HandlerInterface {
 
         Notification notification = new Notification(subscription, sendNotificationCommand.getPayload());
 
-        HttpResponse response = pushService.send(notification);
+        HttpResponse<?> response = pushService.send(notification);
 
         System.out.println(response);
     }

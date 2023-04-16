@@ -1,5 +1,5 @@
 package nl.martijndwars.webpush;
 
 public enum Encoding {
-    AESGCM, AES128GCM
+    AES_GCM, AES_128_GCM
 }

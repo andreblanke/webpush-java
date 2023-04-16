@@ -7,9 +7,10 @@ import com.google.gson.JsonPrimitive;
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription;
-import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.function.Executable;
 
+import java.net.http.HttpClient;
+import java.net.http.HttpResponse;
 import java.security.GeneralSecurityException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,8 +49,8 @@ public class BrowserTest implements Executable {
         String message = "Hëllö, world!";
         Notification notification = new Notification(subscription, message);
 
-        HttpResponse response = pushService.send(notification);
-        assertEquals(201, response.getStatusLine().getStatusCode());
+        HttpResponse<?> response = pushService.send(notification);
+        assertEquals(201, response.statusCode());
 
         JsonArray messages = testingService.getNotificationStatus(testSuiteId, testId);
         assertEquals(1, messages.size());
@@ -59,18 +60,17 @@ public class BrowserTest implements Executable {
     protected PushService getPushService() throws GeneralSecurityException {
         PushService pushService;
 
+        final var httpClient = HttpClient.newHttpClient();
         if (!configuration.isVapid()) {
-            pushService = new PushService(GCM_API_KEY);
+            pushService = new PushService(httpClient, GCM_API_KEY);
         } else {
-            pushService = new PushService(PUBLIC_KEY, PRIVATE_KEY, VAPID_SUBJECT);
+            pushService = new PushService(httpClient, PUBLIC_KEY, PRIVATE_KEY, VAPID_SUBJECT);
         }
         return pushService;
     }
 
     /**
      * The name used by JUnit to display the test.
-     *
-     * @return
      */
     public String getDisplayName() {
         return "Browser " + configuration.browser + ", version " + configuration.version + ", vapid " + configuration.isVapid();

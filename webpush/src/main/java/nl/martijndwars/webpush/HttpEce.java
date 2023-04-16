@@ -78,7 +78,7 @@ public class HttpEce {
         cipher.init(ENCRYPT_MODE, new SecretKeySpec(key, "AES"), params);
 
         // For AES128GCM suffix {0x02}, for AESGCM prefix {0x00, 0x00}.
-        if (version == Encoding.AES128GCM) {
+        if (version == Encoding.AES_128_GCM) {
             byte[] header = buildHeader(salt, keyid);
             log("header", header);
 
@@ -106,7 +106,7 @@ public class HttpEce {
         byte[] body;
 
         // Parse and strip the header
-        if (version == Encoding.AES128GCM) {
+        if (version == Encoding.AES_128_GCM) {
             byte[][] header = parseHeader(payload);
 
             salt = header[0];
@@ -144,7 +144,7 @@ public class HttpEce {
 
         byte[] plaintext = cipher.doFinal(ciphertext);
 
-        if (version == Encoding.AES128GCM) {
+        if (version == Encoding.AES_128_GCM) {
             // Remove one byte of padding at the end
             return Arrays.copyOfRange(plaintext, 0, plaintext.length - 1);
         } else {
@@ -253,13 +253,13 @@ public class HttpEce {
         byte[] keyInfo;
         byte[] nonceInfo;
 
-        if (version == Encoding.AESGCM) {
+        if (version == Encoding.AES_GCM) {
             byte[][] secretAndContext = extractSecretAndContext(key, keyId, dh, authSecret);
             secret = secretAndContext[0];
 
             keyInfo = buildInfo("aesgcm", secretAndContext[1]);
             nonceInfo = buildInfo("nonce", secretAndContext[1]);
-        } else if (version == Encoding.AES128GCM) {
+        } else if (version == Encoding.AES_128_GCM) {
             keyInfo = "Content-Encoding: aes128gcm\0".getBytes();
             nonceInfo = "Content-Encoding: nonce\0".getBytes();
 
