@@ -10,7 +10,7 @@ import nl.martijndwars.webpush.cli.commands.SendNotificationCommand;
 
 public class SendNotificationHandler implements HandlerInterface {
 
-    private SendNotificationCommand sendNotificationCommand;
+    private final SendNotificationCommand sendNotificationCommand;
 
     public SendNotificationHandler(SendNotificationCommand sendNotificationCommand) {
         this.sendNotificationCommand = sendNotificationCommand;
@@ -25,7 +25,10 @@ public class SendNotificationHandler implements HandlerInterface {
 
         Subscription subscription = sendNotificationCommand.getSubscription();
 
-        Notification notification = new Notification(subscription, sendNotificationCommand.getPayload());
+        Notification notification = Notification.builder()
+            .subscription(subscription)
+            .payload(sendNotificationCommand.getPayload())
+            .build();
 
         HttpResponse<?> response = pushService.send(notification);
 

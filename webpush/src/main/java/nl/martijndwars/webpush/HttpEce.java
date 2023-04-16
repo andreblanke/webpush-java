@@ -21,17 +21,16 @@ import static javax.crypto.Cipher.DECRYPT_MODE;
 import static javax.crypto.Cipher.ENCRYPT_MODE;
 import static nl.martijndwars.webpush.Utils.*;
 
+// TODO: Support multiple records (not needed for Web Push)
 /**
  * An implementation of Encrypted Content-Encoding for HTTP.
- *
+ * <p>
  * The first implementation follows the specification in [1]. The specification later moved from
  * "aesgcm" to "aes128gcm" as content encoding [2]. To remain backwards compatible this library
  * supports both.
- *
- * [1] https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-01
- * [2] https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-09
- *
- * TODO: Support multiple records (not needed for Web Push)
+ * <p>
+ * [1] <a href="https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-01">...</a>
+ * [2] <a href="https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-09">...</a>
  */
 public class HttpEce {
     public static final int KEY_LENGTH = 16;
@@ -40,11 +39,11 @@ public class HttpEce {
     public static final int TWO_BYTE_MAX = 65_536;
     public static final String WEB_PUSH_INFO = "WebPush: info\0";
 
-    private Map<String, KeyPair> keys;
-    private Map<String, String> labels;
+    private final Map<String, KeyPair> keys;
+    private final Map<String, String> labels;
 
     public HttpEce() {
-        this(new HashMap<String, KeyPair>(), new HashMap<String, String>());
+        this(new HashMap<>(), new HashMap<>());
     }
 
     public HttpEce(Map<String, KeyPair> keys, Map<String, String> labels) {
@@ -61,9 +60,6 @@ public class HttpEce {
      * @param keyid      An identifier for the local key. Only applies to AESGCM. For AES128GCM, the header contains the keyid.
      * @param dh         An Elliptic curve Diffie-Hellman public privateKey on the P-256 curve (Web Push: the user's keys.p256dh)
      * @param authSecret An authentication secret (Web Push: the user's keys.auth)
-     * @param version
-     * @return
-     * @throws GeneralSecurityException
      */
     public byte[] encrypt(byte[] plaintext, byte[] salt, byte[] privateKey, String keyid, ECPublicKey dh, byte[] authSecret, Encoding version) throws GeneralSecurityException {
         log("encrypt", plaintext);
@@ -100,7 +96,6 @@ public class HttpEce {
      * @param payload Header and body (ciphertext)
      * @param salt    May be null when version is AES128GCM; the salt is extracted from the header.
      * @param version AES128GCM or AESGCM.
-     * @return
      */
     public byte[] decrypt(byte[] payload, byte[] salt, byte[] key, String keyid, Encoding version) throws InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, InvalidAlgorithmParameterException, BadPaddingException, NoSuchProviderException, NoSuchPaddingException {
         byte[] body;
@@ -155,12 +150,10 @@ public class HttpEce {
 
     /**
      * Compute the Encryption Content Coding Header.
-     *
-     * See https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-09#section-2.1.
+     * <p>
+     * See <a href="https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-09#section-2.1">...</a>.
      *
      * @param salt  Array of 16 bytes
-     * @param keyid
-     * @return
      */
     private byte[] buildHeader(byte[] salt, String keyid) {
         byte[] keyIdBytes;
@@ -183,9 +176,6 @@ public class HttpEce {
 
     /**
      * Future versions might require a null-terminated info string?
-     *
-     * @param type
-     * @return
      */
     protected static byte[] buildInfo(String type, byte[] context) {
         ByteBuffer buffer = ByteBuffer.allocate(19 + type.length() + context.length);
@@ -303,16 +293,8 @@ public class HttpEce {
 
     /**
      * Combine Shared and Authentication Secrets
-     *
-     * See https://tools.ietf.org/html/draft-ietf-webpush-encryption-09#section-3.3.
-     *
-     * @param keyId
-     * @param dh
-     * @param authSecret
-     * @param mode
-     * @return
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeyException
+     * <p>
+     * See <a href="https://tools.ietf.org/html/draft-ietf-webpush-encryption-09#section-3.3">...</a>.
      */
     public byte[] webpushSecret(String keyId, ECPublicKey dh, byte[] authSecret, int mode) throws NoSuchAlgorithmException, InvalidKeyException {
         ECPublicKey senderPubKey;
@@ -338,21 +320,15 @@ public class HttpEce {
         KeyAgreement keyAgreement = KeyAgreement.getInstance("ECDH");
         keyAgreement.init(getPrivateKey(keyId));
         keyAgreement.doPhase(remotePubKey, true);
-        byte[] secret = keyAgreement.generateSecret();
 
-        byte[] ikm = secret;
-        byte[] salt = authSecret;
+        byte[] ikm = keyAgreement.generateSecret();
         byte[] info = concat(WEB_PUSH_INFO.getBytes(), encode(receiverPubKey), encode(senderPubKey));
 
-        return hkdfExpand(ikm, salt, info, SHA_256_LENGTH);
+        return hkdfExpand(ikm, authSecret, info, SHA_256_LENGTH);
     }
 
     /**
      * Compute the shared secret (using the server's key pair and the client's public key) and the context.
-     *
-     * @param keyid
-     * @param publicKey
-     * @return
      */
     private  byte[][] extractDH(String keyid, ECPublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException {
         ECPublicKey senderPubKey = getPublicKey(keyid);
@@ -372,9 +348,6 @@ public class HttpEce {
 
     /**
      * Get the public key for the given keyid.
-     *
-     * @param keyid
-     * @return
      */
     private ECPublicKey getPublicKey(String keyid) {
         return (ECPublicKey) keys.get(keyid).getPublic();
@@ -382,9 +355,6 @@ public class HttpEce {
 
     /**
      * Get the private key for the given keyid.
-     *
-     * @param keyid
-     * @return
      */
     private ECPrivateKey getPrivateKey(String keyid) {
         return (ECPrivateKey) keys.get(keyid).getPrivate();
@@ -393,9 +363,6 @@ public class HttpEce {
 
     /**
      * Encode the public key as a byte array and prepend its length in two bytes.
-     *
-     * @param publicKey
-     * @return
      */
     private static byte[] lengthPrefix(ECPublicKey publicKey) {
         byte[] bytes = encode(publicKey);
@@ -405,13 +372,10 @@ public class HttpEce {
 
     /**
      * Convert an integer number to a two-byte binary number.
-     *
+     * <p>
      * This implementation:
      *   1. masks all but the lowest eight bits
      *   2. discards the lowest eight bits by moving all bits 8 places to the right.
-     *
-     * @param number
-     * @return
      */
     private static byte[] intToBytes(int number) {
         if (number < 0) {
@@ -431,10 +395,6 @@ public class HttpEce {
 
     /**
      * Print the length and unpadded url-safe base64 encoding of the byte array.
-     *
-     * @param info
-     * @param array
-     * @return
      */
     private static byte[] log(String info, byte[] array) {
         if ("1".equals(System.getenv("ECE_KEYLOG"))) {

@@ -135,16 +135,16 @@ public abstract class AbstractPushService<T extends AbstractPushService<T>> {
         }
 
         Encrypted encrypted = encrypt(
-            notification.getPayload(),
-            notification.getUserPublicKey(),
-            notification.getUserAuth(),
+            notification.payload(),
+            notification.userPublicKey(),
+            notification.userAuth(),
             encoding
         );
 
-        byte[] dh = Utils.encode((ECPublicKey) encrypted.getPublicKey());
-        byte[] salt = encrypted.getSalt();
+        byte[] dh = Utils.encode((ECPublicKey) encrypted.publicKey());
+        byte[] salt = encrypted.salt();
 
-        final var builder = HttpRequest.newBuilder(new URI(notification.getEndpoint()))
+        final var builder = HttpRequest.newBuilder(new URI(notification.endpoint()))
             .header("TTL", String.valueOf(notification.getTTL()));
 
         final var cryptoKeyHeader = new HashMap<String, String>();
@@ -170,7 +170,7 @@ public abstract class AbstractPushService<T extends AbstractPushService<T>> {
                 cryptoKeyHeader.put("dh", Base64.getUrlEncoder().encodeToString(dh));
             }
 
-            bodyPublisher = HttpRequest.BodyPublishers.ofByteArray(encrypted.getCiphertext());
+            bodyPublisher = HttpRequest.BodyPublishers.ofByteArray(encrypted.ciphertext());
         } else {
             bodyPublisher = HttpRequest.BodyPublishers.noBody();
         }
@@ -182,8 +182,8 @@ public abstract class AbstractPushService<T extends AbstractPushService<T>> {
 
             builder.header("Authorization", "key=" + getGcmApiKey());
         } else if (vapidEnabled()) {
-            if (encoding == Encoding.AES_128_GCM && notification.getEndpoint().startsWith("https://fcm.googleapis.com")) {
-                builder.uri(new URI(notification.getEndpoint().replace("fcm/send", "wp")));
+            if (encoding == Encoding.AES_128_GCM && notification.endpoint().startsWith("https://fcm.googleapis.com")) {
+                builder.uri(new URI(notification.endpoint().replace("fcm/send", "wp")));
             }
 
             final var claims = new JwtClaims();
@@ -203,12 +203,9 @@ public abstract class AbstractPushService<T extends AbstractPushService<T>> {
             byte[] pk = Utils.encode((ECPublicKey) getPublicKey());
 
             switch (encoding) {
-                case AES_128_GCM:
+                case AES_128_GCM ->
                     builder.header("Authorization", "vapid t=" + jws.getCompactSerialization() + ", k=" + Base64.getUrlEncoder().withoutPadding().encodeToString(pk));
-                    break;
-                case AES_GCM:
-                    builder.header("Authorization", "WebPush " + jws.getCompactSerialization());
-                    break;
+                case AES_GCM -> builder.header("Authorization", "WebPush " + jws.getCompactSerialization());
             }
             cryptoKeyHeader.put("p256ecdsa", Base64.getUrlEncoder().encodeToString(pk));
         } else if (notification.isFcm() && getGcmApiKey() != null) {

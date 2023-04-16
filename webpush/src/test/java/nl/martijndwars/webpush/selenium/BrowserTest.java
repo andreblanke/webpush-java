@@ -21,9 +21,9 @@ public class BrowserTest implements Executable {
     public static final String PRIVATE_KEY = "AM0aAyoIryzARADnIsSCwg1p1aWFAL3Idc8dNXpf74MH";
     public static final String VAPID_SUBJECT = "http://localhost:8090";
 
-    private TestingService testingService;
-    private Configuration configuration;
-    private int testSuiteId;
+    private final TestingService testingService;
+    private final Configuration configuration;
+    private final int testSuiteId;
 
     public BrowserTest(TestingService testingService, Configuration configuration, int testSuiteId) {
         this.configuration = configuration;
@@ -47,7 +47,10 @@ public class BrowserTest implements Executable {
         Subscription subscription = new Gson().fromJson(test.get("subscription").getAsJsonObject(), Subscription.class);
 
         String message = "Hëllö, world!";
-        Notification notification = new Notification(subscription, message);
+        Notification notification = Notification.builder()
+            .subscription(subscription)
+            .payload(message)
+            .build();
 
         HttpResponse<?> response = pushService.send(notification);
         assertEquals(201, response.statusCode());

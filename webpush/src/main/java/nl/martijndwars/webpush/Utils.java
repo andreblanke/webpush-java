@@ -27,9 +27,6 @@ public class Utils {
      * Get the uncompressed encoding of the public key point. The resulting array
      * should be 65 bytes length and start with 0x04 followed by the x and y
      * coordinates (32 bytes each).
-     *
-     * @param publicKey
-     * @return
      */
     public static byte[] encode(ECPublicKey publicKey) {
         return publicKey.getQ().getEncoded(false);
@@ -42,8 +39,6 @@ public class Utils {
     /**
      * Load the public key from a URL-safe base64 encoded string. Takes into
      * account the different encodings, including point compression.
-     *
-     * @param encodedPublicKey
      */
     public static PublicKey loadPublicKey(String encodedPublicKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] decodedPublicKey = Base64.getUrlDecoder().decode(encodedPublicKey);
@@ -51,9 +46,7 @@ public class Utils {
     }
 
     /**
-     * Load the public key from a byte array. 
-     *
-     * @param decodedPublicKey
+     * Load the public key from a byte array.
      */
     public static PublicKey loadPublicKey(byte[] decodedPublicKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
         KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM, PROVIDER_NAME);
@@ -67,12 +60,6 @@ public class Utils {
 
     /**
      * Load the private key from a URL-safe base64 encoded string
-     *
-     * @param encodedPrivateKey
-     * @return
-     * @throws NoSuchProviderException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeySpecException
      */
     public static PrivateKey loadPrivateKey(String encodedPrivateKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] decodedPrivateKey = Base64.getUrlDecoder().decode(encodedPrivateKey);
@@ -81,12 +68,6 @@ public class Utils {
 
     /**
      * Load the private key from a byte array
-     *
-     * @param decodedPrivateKey
-     * @return
-     * @throws NoSuchProviderException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeySpecException
      */
     public static PrivateKey loadPrivateKey(byte[] decodedPrivateKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
         BigInteger s = BigIntegers.fromUnsignedByteArray(decodedPrivateKey);
@@ -99,9 +80,6 @@ public class Utils {
 
     /**
      * Load a public key from the private key.
-     *
-     * @param privateKey
-     * @return
      */
     public static ECPublicKey loadPublicKey(ECPrivateKey privateKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
         KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM, PROVIDER_NAME);
@@ -116,10 +94,6 @@ public class Utils {
 
     /**
      * Verify that the private key belongs to the public key.
-     *
-     * @param privateKey
-     * @param publicKey
-     * @return
      */
     public static boolean verifyKeyPair(PrivateKey privateKey, PublicKey publicKey) {
         ECNamedCurveParameterSpec curveParameters = ECNamedCurveTable.getParameterSpec(CURVE);
@@ -169,10 +143,6 @@ public class Utils {
 
     /**
      * Create a byte array of the given length from the given integer.
-     *
-     * @param integer
-     * @param size
-     * @return
      */
     public static byte[] toByteArray(int integer, int size) {
         ByteBuffer buffer = ByteBuffer.allocate(size);
