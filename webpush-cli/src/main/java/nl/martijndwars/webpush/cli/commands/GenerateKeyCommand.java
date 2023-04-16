@@ -16,5 +16,4 @@ public class GenerateKeyCommand {
     public String getPublicKeyFile() {
         return publicKeyFile;
     }
-
 }

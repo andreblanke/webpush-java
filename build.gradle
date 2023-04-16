@@ -1,3 +1,10 @@
 plugins {
     id 'io.codearte.nexus-staging' version '0.30.0'
 }
+
+allprojects {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}

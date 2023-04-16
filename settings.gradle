@@ -1,3 +1,4 @@
-rootProject.name = 'web-push'
+rootProject.name = 'webpush'
 
 include('webpush')
+include('webpush-cli')

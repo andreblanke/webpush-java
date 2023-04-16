@@ -5,6 +5,7 @@ import nl.martijndwars.webpush.cli.commands.GenerateKeyCommand;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.interfaces.ECPrivateKey;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
@@ -57,9 +58,9 @@ public class GenerateKeyHandler implements HandlerInterface {
      * @throws NoSuchAlgorithmException
      */
     public KeyPair generateKeyPair() throws InvalidAlgorithmParameterException, NoSuchProviderException, NoSuchAlgorithmException {
-        ECNamedCurveParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec(CURVE);
+        ECNamedCurveParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec(Utils.CURVE);
 
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM, PROVIDER_NAME);
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(Utils.ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
         keyPairGenerator.initialize(parameterSpec);
 
         return keyPairGenerator.generateKeyPair();
