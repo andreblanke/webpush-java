@@ -88,13 +88,13 @@ test {
     exclude '**/SeleniumTests.class'
 }
 
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
+tasks.register('javadocJar', Jar) {
+    archiveClassifier.set('javadoc')
     from javadoc
 }
 
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
+tasks.register('sourcesJar', Jar) {
+    archiveClassifier.set('sources')
     from sourceSets.main.allSource
 }
 
