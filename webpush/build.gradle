@@ -17,7 +17,7 @@ dependencies {
     api group: 'org.asynchttpclient', name: 'async-http-client', version: '2.12.3'
 
     // For cryptographic operations
-    api group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.70'
+    api group: 'org.bouncycastle', name: 'bcprov-jdk18on', version: '1.73'
 
     // For creating and signing JWT
     api group: 'org.bitbucket.b_c', name: 'jose4j', version: '0.7.9'
@@ -38,7 +38,7 @@ dependencies {
     testImplementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
 
     // For reading the demo vapid keypair from a pem file
-    testImplementation group: 'org.bouncycastle', name: 'bcpkix-jdk15on', version: '1.70'
+    testImplementation group: 'org.bouncycastle', name: 'bcpkix-jdk18on', version: '1.73'
 
     // For verifying Base64Encoder results in unit tests
     testImplementation group: 'com.google.guava', name: 'guava', version: '31.0.1-jre'
