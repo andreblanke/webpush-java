@@ -83,6 +83,8 @@ public abstract class AbstractPushService<T extends AbstractPushService<T>> {
         this.subject = subject;
     }
 
+    public record Encrypted(PublicKey publicKey, byte[] salt, byte[] ciphertext) {}
+
     /**
      * Encrypt the payload.
      * <p>
@@ -109,11 +111,7 @@ public abstract class AbstractPushService<T extends AbstractPushService<T>> {
         HttpEce httpEce = new HttpEce(keys, labels);
         byte[] ciphertext = httpEce.encrypt(payload, salt, null, SERVER_KEY_ID, userPublicKey, userAuth, encoding);
 
-        return new Encrypted.Builder()
-                .withSalt(salt)
-                .withPublicKey(localKeyPair.getPublic())
-                .withCiphertext(ciphertext)
-                .build();
+        return new Encrypted(localKeyPair.getPublic(), salt, ciphertext);
     }
 
     /**
