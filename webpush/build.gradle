@@ -43,8 +43,6 @@ test {
         showStandardStreams true
         exceptionFormat 'full'
     }
-
-    exclude '**/SeleniumTests.class'
 }
 
 tasks.register('javadocJar', Jar) {
