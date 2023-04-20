@@ -31,18 +31,8 @@ publishing {
         }
     }
     repositories {
-        maven {
-            credentials {
-                username ossrhUsername
-                password ossrhPassword
-            }
-            url getRepositoryUrl()
-        }
+        mavenLocal()
     }
-}
-
-signing {
-    sign publishing.publications.mavenJava
 }
 
 def getRepositoryUrl() {

@@ -60,6 +60,4 @@ artifacts {
     archives sourcesJar
 }
 
-if (hasProperty('release')) {
-    apply from: 'release.gradle'
-}
+apply from: 'release.gradle'
