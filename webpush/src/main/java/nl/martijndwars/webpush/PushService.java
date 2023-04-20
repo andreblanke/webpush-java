@@ -1,68 +1,94 @@
 package nl.martijndwars.webpush;
 
-import org.jose4j.lang.JoseException;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.util.Objects;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
 import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("unused")
-public class PushService extends AbstractPushService<PushService> {
+public interface PushService extends AutoCloseable {
 
-    private final HttpClient httpClient;
+    Encoding DEFAULT_ENCODING = Encoding.AES_128_GCM;
 
-    public PushService(HttpClient httpClient) {
-        this.httpClient = Objects.requireNonNull(httpClient);
+    static JdkHttpClientPushService.Builder builder() {
+        return new JdkHttpClientPushService.Builder();
     }
 
-    public PushService(HttpClient httpClient, String gcmApiKey) {
-        super(gcmApiKey);
+    String getGcmApiKey();
 
-        this.httpClient = Objects.requireNonNull(httpClient);
+    KeyPair getVapidKeyPair();
+
+    default ECPublicKey getVapidPublicKey() {
+        return (ECPublicKey) getVapidKeyPair().getPublic();
     }
 
-    public PushService(HttpClient httpClient, KeyPair keyPair) {
-        super(keyPair);
-
-        this.httpClient = Objects.requireNonNull(httpClient);
+    default ECPrivateKey getVapidPrivateKey() {
+        return (ECPrivateKey) getVapidKeyPair().getPrivate();
     }
 
-    public PushService(HttpClient httpClient, KeyPair keyPair, String subject) {
-        super(keyPair, subject);
-
-        this.httpClient = Objects.requireNonNull(httpClient);
+    default boolean isVapidEnabled() {
+        final var vapidKeyPair = getVapidKeyPair();
+        return (vapidKeyPair.getPublic() != null) && (vapidKeyPair.getPrivate() != null);
     }
 
-    public PushService(HttpClient httpClient, String publicKey, String privateKey) throws GeneralSecurityException {
-        super(publicKey, privateKey);
+    String getVapidSubject();
 
-        this.httpClient = Objects.requireNonNull(httpClient);
+    default HttpResponse<Void> send(final Notification notification) throws Exception {
+        return send(notification, DEFAULT_ENCODING);
     }
 
-    public PushService(HttpClient httpClient, String publicKey, String privateKey, String subject) throws GeneralSecurityException {
-        super(publicKey, privateKey, subject);
+    HttpResponse<Void> send(Notification notification, Encoding encoding) throws Exception;
 
-        this.httpClient = Objects.requireNonNull(httpClient);
+    default CompletableFuture<HttpResponse<Void>> sendAsync(final Notification notification) throws Exception {
+        return sendAsync(notification, DEFAULT_ENCODING);
     }
 
-    public HttpResponse<?> send(Notification notification) throws JoseException, GeneralSecurityException, IOException, URISyntaxException, InterruptedException {
-        return send(notification, Encoding.AES_GCM);
-    }
+    CompletableFuture<HttpResponse<Void>> sendAsync(Notification notification, Encoding encoding) throws Exception;
 
-    public HttpResponse<?> send(Notification notification, Encoding encoding) throws JoseException, GeneralSecurityException, IOException, URISyntaxException, InterruptedException {
-        return httpClient.send(prepareRequest(notification, encoding), HttpResponse.BodyHandlers.discarding());
-    }
+    @SuppressWarnings("unchecked")
+    abstract class Builder<T extends Builder<T>> {
 
-    public CompletableFuture<HttpResponse<Void>> sendAsync(Notification notification) throws GeneralSecurityException, IOException, JoseException, URISyntaxException {
-        return sendAsync(notification, Encoding.AES_128_GCM);
-    }
+        protected String gcmApiKey;
 
-    public CompletableFuture<HttpResponse<Void>> sendAsync(Notification notification, Encoding encoding) throws JoseException, GeneralSecurityException, IOException, URISyntaxException {
-        return httpClient.sendAsync(prepareRequest(notification, encoding), HttpResponse.BodyHandlers.discarding());
+        protected KeyPair vapidKeyPair;
+
+        protected String vapidSubject;
+
+        abstract PushService build();
+
+        public T withGcmApiKey(final String gcmApiKey) {
+            this.gcmApiKey = gcmApiKey;
+            return (T) this;
+        }
+
+        public T withVapidKeyPair(final KeyPair vapidKeyPair) {
+            this.vapidKeyPair = vapidKeyPair;
+            return (T) this;
+        }
+
+        public T withVapidPublicKey(final String encodedVapidPublicKey) throws GeneralSecurityException {
+            return withVapidPublicKey((ECPublicKey) Utils.loadPublicKey(encodedVapidPublicKey));
+        }
+
+        public T withVapidPublicKey(final ECPublicKey vapidPublicKey) {
+            vapidKeyPair = new KeyPair(vapidPublicKey, vapidKeyPair.getPrivate());
+            return (T) this;
+        }
+
+        public T withVapidPrivateKey(final String encodedVapidPrivateKey) throws GeneralSecurityException {
+            return withVapidPrivateKey((ECPrivateKey) Utils.loadPrivateKey(encodedVapidPrivateKey));
+        }
+
+        public T withVapidPrivateKey(final ECPrivateKey vapidPrivateKey) {
+            vapidKeyPair = new KeyPair(vapidKeyPair.getPublic(), vapidPrivateKey);
+            return (T) this;
+        }
+
+        public T withVapidSubject(final String vapidSubject) {
+            this.vapidSubject = vapidSubject;
+            return (T) this;
+        }
     }
 }

@@ -1,31 +1,38 @@
 package nl.martijndwars.webpush.selenium;
 
+import java.security.GeneralSecurityException;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
+import org.junit.jupiter.api.function.Executable;
+
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription;
-import org.junit.jupiter.api.function.Executable;
-
-import java.net.http.HttpClient;
-import java.net.http.HttpResponse;
-import java.security.GeneralSecurityException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class BrowserTest implements Executable {
-    public static final String GCM_API_KEY = "AIzaSyBAU0VfXoskxUSg81K5VgLgwblHbZWe6tA";
-    public static final String PUBLIC_KEY = "BNFDO1MUnNpx0SuQyQcAAWYETa2+W8z/uc5sxByf/UZLHwAhFLwEDxS5iB654KHiryq0AxDhFXS7DVqXDKjjN+8=";
-    public static final String PRIVATE_KEY = "AM0aAyoIryzARADnIsSCwg1p1aWFAL3Idc8dNXpf74MH";
-    public static final String VAPID_SUBJECT = "http://localhost:8090";
+@SuppressWarnings("SpellCheckingInspection")
+public final class BrowserTest implements Executable {
 
     private final TestingService testingService;
+
     private final Configuration configuration;
+
     private final int testSuiteId;
 
-    public BrowserTest(TestingService testingService, Configuration configuration, int testSuiteId) {
+    private static final String GCM_API_KEY = "AIzaSyBAU0VfXoskxUSg81K5VgLgwblHbZWe6tA";
+
+    private static final String PUBLIC_KEY = "BNFDO1MUnNpx0SuQyQcAAWYETa2+W8z/uc5sxByf/UZLHwAhFLwEDxS5iB654KHiryq0AxDhFXS7DVqXDKjjN+8=";
+
+    private static final String PRIVATE_KEY = "AM0aAyoIryzARADnIsSCwg1p1aWFAL3Idc8dNXpf74MH";
+
+    private static final String VAPID_SUBJECT = "http://localhost:8090";
+
+    public BrowserTest(final TestingService testingService, final Configuration configuration, final int testSuiteId) {
         this.configuration = configuration;
         this.testingService = testingService;
         this.testSuiteId = testSuiteId;
@@ -33,12 +40,10 @@ public class BrowserTest implements Executable {
 
     /**
      * Execute the test for the given browser configuration.
-     *
-     * @throws Throwable
      */
     @Override
     public void execute() throws Throwable {
-        PushService pushService = getPushService();
+        final var pushService = getPushService();
 
         JsonObject test = testingService.getSubscription(testSuiteId, configuration);
 
@@ -46,13 +51,13 @@ public class BrowserTest implements Executable {
 
         Subscription subscription = new Gson().fromJson(test.get("subscription").getAsJsonObject(), Subscription.class);
 
-        String message = "Hëllö, world!";
+        final var message = "Hëllö, world!";
         Notification notification = Notification.builder()
             .subscription(subscription)
             .payload(message)
             .build();
 
-        HttpResponse<?> response = pushService.send(notification);
+        final var response = pushService.send(notification);
         assertEquals(201, response.statusCode());
 
         JsonArray messages = testingService.getNotificationStatus(testSuiteId, testId);
@@ -60,22 +65,22 @@ public class BrowserTest implements Executable {
         assertEquals(new JsonPrimitive(message), messages.get(0));
     }
 
-    protected PushService getPushService() throws GeneralSecurityException {
-        PushService pushService;
-
-        final var httpClient = HttpClient.newHttpClient();
-        if (!configuration.isVapid()) {
-            pushService = new PushService(httpClient, GCM_API_KEY);
+    private PushService getPushService() throws GeneralSecurityException {
+        var builder = PushService.builder();
+        if (configuration.isVapid()) {
+            builder = builder.withVapidSubject(VAPID_SUBJECT)
+                .withVapidPublicKey(PUBLIC_KEY)
+                .withVapidPrivateKey(PRIVATE_KEY);
         } else {
-            pushService = new PushService(httpClient, PUBLIC_KEY, PRIVATE_KEY, VAPID_SUBJECT);
+            builder = builder.withGcmApiKey(GCM_API_KEY);
         }
-        return pushService;
+        return builder.build();
     }
 
     /**
      * The name used by JUnit to display the test.
      */
     public String getDisplayName() {
-        return "Browser " + configuration.browser + ", version " + configuration.version + ", vapid " + configuration.isVapid();
+        return "Browser " + configuration.browser() + ", version " + configuration.version() + ", vapid " + configuration.isVapid();
     }
 }

@@ -1,20 +1,13 @@
 package nl.martijndwars.webpush;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublisher;
 import java.security.GeneralSecurityException;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,137 +15,68 @@ import java.util.StringJoiner;
 
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
-import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.lang.JoseException;
 
-public abstract class AbstractPushService<T extends AbstractPushService<T>> {
-
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-    public static final String SERVER_KEY_ID = "server-key-id";
-    public static final String SERVER_KEY_CURVE = "P-256";
+public abstract class AbstractPushService implements PushService {
 
     /**
      * The Google Cloud Messaging API key (for pre-VAPID in Chrome)
      */
-    private String gcmApiKey;
+    private final String gcmApiKey;
 
     /**
-     * Subject used in the JWT payload (for VAPID). When left as null, then no subject will be used
+     * Subject used in the JWT payload (for VAPID). When left as {@code null}, then no subject will be used
      * (RFC-8292 2.1 says that it is optional)
      */
-    private String subject;
+    private final String vapidSubject;
 
-    /**
-     * The public key (for VAPID)
-     */
-    private PublicKey publicKey;
+    private final KeyPair vapidKeyPair;
 
-    /**
-     * The private key (for VAPID)
-     */
-    private PrivateKey privateKey;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    public AbstractPushService() {
+    public static final String SERVER_KEY_ID = "server-key-id";
+
+    public static final String SERVER_KEY_CURVE = "P-256";
+
+    protected AbstractPushService(final Builder<?> builder) {
+        this.gcmApiKey    = builder.gcmApiKey;
+        this.vapidKeyPair = builder.vapidKeyPair;
+        this.vapidSubject = builder.vapidSubject;
     }
 
-    public AbstractPushService(String gcmApiKey) {
-        this.gcmApiKey = gcmApiKey;
+    @Override
+    public void close() {
     }
 
-    public AbstractPushService(KeyPair keyPair) {
-        this.publicKey = keyPair.getPublic();
-        this.privateKey = keyPair.getPrivate();
-    }
-
-    public AbstractPushService(KeyPair keyPair, String subject) {
-        this(keyPair);
-        this.subject = subject;
-    }
-
-    public AbstractPushService(String publicKey, String privateKey) throws GeneralSecurityException {
-        this.publicKey = Utils.loadPublicKey(publicKey);
-        this.privateKey = Utils.loadPrivateKey(privateKey);
-    }
-
-    public AbstractPushService(String publicKey, String privateKey, String subject) throws GeneralSecurityException {
-        this(publicKey, privateKey);
-        this.subject = subject;
-    }
-
-    public record Encrypted(PublicKey publicKey, byte[] salt, byte[] ciphertext) {}
-
-    /**
-     * Encrypt the payload.
-     * <p>
-     * Encryption uses Elliptic curve Diffie-Hellman (ECDH) cryptography over the prime256v1 curve.
-     *
-     * @param payload       Payload to encrypt.
-     * @param userPublicKey The user agent's public key (keys.p256dh).
-     * @param userAuth      The user agent's authentication secret (keys.auth).
-     *
-     * @return An Encrypted object containing the public key, salt, and ciphertext.
-     */
-    public static Encrypted encrypt(byte[] payload, ECPublicKey userPublicKey, byte[] userAuth, Encoding encoding) throws GeneralSecurityException {
-        KeyPair localKeyPair = generateLocalKeyPair();
-
-        Map<String, KeyPair> keys = new HashMap<>();
-        keys.put(SERVER_KEY_ID, localKeyPair);
-
-        Map<String, String> labels = new HashMap<>();
-        labels.put(SERVER_KEY_ID, SERVER_KEY_CURVE);
-
-        byte[] salt = new byte[16];
-        SECURE_RANDOM.nextBytes(salt);
-
-        HttpEce httpEce = new HttpEce(keys, labels);
-        byte[] ciphertext = httpEce.encrypt(payload, salt, null, SERVER_KEY_ID, userPublicKey, userAuth, encoding);
-
-        return new Encrypted(localKeyPair.getPublic(), salt, ciphertext);
-    }
-
-    /**
-     * Generate the local (ephemeral) keys.
-     */
-    private static KeyPair generateLocalKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        ECNamedCurveParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDH", "BC");
-        keyPairGenerator.initialize(parameterSpec);
-
-        return keyPairGenerator.generateKeyPair();
-    }
-
-    protected final HttpRequest prepareRequest(Notification notification, Encoding encoding) throws GeneralSecurityException, IOException, JoseException, URISyntaxException {
-        if (getPrivateKey() != null && getPublicKey() != null) {
-            if (!Utils.verifyKeyPair(getPrivateKey(), getPublicKey())) {
-                throw new IllegalStateException("Public key and private key do not match.");
-            }
+    protected final HttpRequest prepareRequest(final Notification notification, final Encoding encoding)
+            throws GeneralSecurityException, JoseException, URISyntaxException {
+        if (isVapidEnabled() && !Utils.verifyKeyPair(getVapidPrivateKey(), getVapidPublicKey())) {
+            throw new IllegalStateException("Public key and private key do not match.");
         }
 
-        Encrypted encrypted = encrypt(
+        final Encrypted encrypted = encrypt(
             notification.payload(),
             notification.userPublicKey(),
             notification.userAuth(),
             encoding
         );
 
-        byte[] dh = Utils.encode((ECPublicKey) encrypted.publicKey());
-        byte[] salt = encrypted.salt();
-
-        final var builder = HttpRequest.newBuilder(new URI(notification.endpoint()))
-            .header("TTL", String.valueOf(notification.getTTL()));
+        final var builder = HttpRequest.newBuilder(notification.endpoint())
+            .header("TTL", String.valueOf(notification.ttl()));
 
         final var cryptoKeyHeader = new HashMap<String, String>();
 
         if (notification.hasUrgency()) {
-            builder.header("Urgency", notification.getUrgency().getHeaderValue());
+            builder.header("Urgency", notification.urgency().getHeaderValue());
         }
 
         if (notification.hasTopic()) {
-            builder.header("Topic", notification.getTopic());
+            builder.header("Topic", notification.topic());
         }
 
         final BodyPublisher bodyPublisher;
@@ -163,8 +87,9 @@ public abstract class AbstractPushService<T extends AbstractPushService<T>> {
                 builder.header("Content-Encoding", "aes128gcm");
             } else if (encoding == Encoding.AES_GCM) {
                 builder.header("Content-Encoding", "aesgcm");
-                builder.header("Encryption", "salt=" + Base64.getUrlEncoder().withoutPadding().encodeToString(salt));
+                builder.header("Encryption", "salt=" + Base64.getUrlEncoder().withoutPadding().encodeToString(encrypted.salt()));
 
+                byte[] dh = Utils.encode(encrypted.publicKey());
                 cryptoKeyHeader.put("dh", Base64.getUrlEncoder().encodeToString(dh));
             }
 
@@ -179,26 +104,26 @@ public abstract class AbstractPushService<T extends AbstractPushService<T>> {
             }
 
             builder.header("Authorization", "key=" + getGcmApiKey());
-        } else if (vapidEnabled()) {
-            if (encoding == Encoding.AES_128_GCM && notification.endpoint().startsWith("https://fcm.googleapis.com")) {
-                builder.uri(new URI(notification.endpoint().replace("fcm/send", "wp")));
+        } else if (isVapidEnabled()) {
+            if (encoding == Encoding.AES_128_GCM && notification.isFcm()) {
+                builder.uri(new URI(notification.endpoint().toString().replace("fcm/send", "wp")));
             }
 
             final var claims = new JwtClaims();
             claims.setAudience(notification.getOrigin());
             claims.setExpirationTimeMinutesInTheFuture(12 * 60);
-            if (getSubject() != null) {
-                claims.setSubject(getSubject());
+            if (getVapidSubject() != null) {
+                claims.setSubject(getVapidSubject());
             }
 
             final var jws = new JsonWebSignature();
             jws.setHeader("typ", "JWT");
             jws.setHeader("alg", "ES256");
             jws.setPayload(claims.toJson());
-            jws.setKey(getPrivateKey());
+            jws.setKey(getVapidPrivateKey());
             jws.setAlgorithmHeaderValue(AlgorithmIdentifiers.ECDSA_USING_P256_CURVE_AND_SHA256);
 
-            byte[] pk = Utils.encode((ECPublicKey) getPublicKey());
+            byte[] pk = Utils.encode((ECPublicKey) getVapidPublicKey());
 
             switch (encoding) {
                 case AES_128_GCM ->
@@ -219,94 +144,57 @@ public abstract class AbstractPushService<T extends AbstractPushService<T>> {
         return builder.POST(bodyPublisher).build();
     }
 
-    /**
-     * Set the Google Cloud Messaging (GCM) API key
-     */
-    public T setGcmApiKey(String gcmApiKey) {
-        this.gcmApiKey = gcmApiKey;
+    public record Encrypted(ECPublicKey publicKey, byte[] salt, byte[] ciphertext) {}
 
-        return (T) this;
+    /**
+     * Encrypt the payload.
+     * <p>
+     * Encryption uses Elliptic curve Diffie-Hellman (ECDH) cryptography over the prime256v1 curve.
+     *
+     * @param payload       Payload to encrypt.
+     * @param userPublicKey The user agent's public key (keys.p256dh).
+     * @param userAuth      The user agent's authentication secret (keys.auth).
+     *
+     * @return An Encrypted object containing the public key, salt, and ciphertext.
+     */
+    private static Encrypted encrypt(final byte[] payload, final ECPublicKey userPublicKey, final byte[] userAuth,
+                                     final Encoding encoding) throws GeneralSecurityException {
+        final KeyPair localKeyPair = generateLocalKeyPair();
+
+        final var keys   = Map.of(SERVER_KEY_ID, localKeyPair);
+        final var labels = Map.of(SERVER_KEY_ID, SERVER_KEY_CURVE);
+        final var httpEce = new HttpEce(keys, labels);
+
+        final var salt = new byte[16];
+        SECURE_RANDOM.nextBytes(salt);
+
+        final var ciphertext = httpEce.encrypt(payload, salt, null, SERVER_KEY_ID, userPublicKey, userAuth, encoding);
+        return new Encrypted((ECPublicKey) localKeyPair.getPublic(), salt, ciphertext);
     }
 
+    /**
+     * Generates the local (ephemeral) keys.
+     */
+    private static KeyPair generateLocalKeyPair() throws GeneralSecurityException {
+        final var parameterSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
+
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDH", BouncyCastleProvider.PROVIDER_NAME);
+        keyPairGenerator.initialize(parameterSpec);
+        return keyPairGenerator.generateKeyPair();
+    }
+
+    @Override
     public String getGcmApiKey() {
         return gcmApiKey;
     }
 
-    public String getSubject() {
-        return subject;
+    @Override
+    public String getVapidSubject() {
+        return vapidSubject;
     }
 
-    /**
-     * Set the JWT subject (for VAPID)
-     */
-    public T setSubject(String subject) {
-        this.subject = subject;
-
-        return (T) this;
-    }
-
-    /**
-     * Set the public and private key (for VAPID).
-     */
-    public T setKeyPair(KeyPair keyPair) {
-        setPublicKey(keyPair.getPublic());
-        setPrivateKey(keyPair.getPrivate());
-
-        return (T) this;
-    }
-
-    public PublicKey getPublicKey() {
-        return publicKey;
-    }
-
-    /**
-     * Set the public key using a base64url-encoded string.
-     */
-    public T setPublicKey(String publicKey) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
-        setPublicKey(Utils.loadPublicKey(publicKey));
-
-        return (T) this;
-    }
-
-    public PrivateKey getPrivateKey() {
-        return privateKey;
-    }
-
-    public KeyPair getKeyPair() {
-        return new KeyPair(publicKey, privateKey);
-    }
-
-    /**
-     * Set the public key (for VAPID)
-     */
-    public T setPublicKey(PublicKey publicKey) {
-        this.publicKey = publicKey;
-
-        return (T) this;
-    }
-
-    /**
-     * Set the public key using a base64url-encoded string.
-     */
-    public T setPrivateKey(String privateKey) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
-        setPrivateKey(Utils.loadPrivateKey(privateKey));
-
-        return (T) this;
-    }
-
-    /**
-     * Set the private key (for VAPID)
-     */
-    public T setPrivateKey(PrivateKey privateKey) {
-        this.privateKey = privateKey;
-
-        return (T) this;
-    }
-
-    /**
-     * Check if VAPID is enabled
-     */
-    protected boolean vapidEnabled() {
-        return publicKey != null && privateKey != null;
+    @Override
+    public KeyPair getVapidKeyPair() {
+        return vapidKeyPair;
     }
 }
