@@ -10,8 +10,8 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
+import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +25,8 @@ import dev.blanke.webpush.jwt.Jose4jJwtFactory;
 import dev.blanke.webpush.jwt.JwtFactory;
 
 public abstract class AbstractPushService implements PushService {
+
+    private final Clock clock;
 
     /**
      * The Google Cloud Messaging API key (for pre-VAPID in Chrome)
@@ -50,6 +52,8 @@ public abstract class AbstractPushService implements PushService {
     public static final String SERVER_KEY_CURVE = "P-256";
 
     protected AbstractPushService(final Builder<?> builder) {
+        this.clock = (builder.clock != null) ? builder.clock : Clock.systemUTC();
+
         this.gcmApiKey    = builder.gcmApiKey;
         this.vapidKeyPair = builder.vapidKeyPair;
         this.vapidSubject = builder.vapidSubject;
@@ -129,7 +133,7 @@ public abstract class AbstractPushService implements PushService {
                     "alg", "ES256"),
                 Map.of(
                     "aud", notification.getOrigin(),
-                    "exp", Instant.now().plus(Duration.ofMinutes(20)).getEpochSecond(),
+                    "exp", clock.instant().plus(Duration.ofMinutes(20)).getEpochSecond(),
                     "sub", getVapidSubject()),
                 getVapidPrivateKey());
 

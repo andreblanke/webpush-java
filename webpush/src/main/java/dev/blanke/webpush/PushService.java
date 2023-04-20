@@ -7,6 +7,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
+import java.time.Clock;
 import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("unused")
@@ -52,6 +53,8 @@ public interface PushService extends AutoCloseable {
     @SuppressWarnings("unchecked")
     abstract class Builder<T extends Builder<T>> {
 
+        protected Clock clock;
+
         protected String gcmApiKey;
 
         protected KeyPair vapidKeyPair;
@@ -61,6 +64,11 @@ public interface PushService extends AutoCloseable {
         protected JwtFactory jwtFactory;
 
         abstract PushService build();
+
+        public T withClock(final Clock clock) {
+            this.clock = clock;
+            return (T) this;
+        }
 
         public T withGcmApiKey(final String gcmApiKey) {
             this.gcmApiKey = gcmApiKey;
