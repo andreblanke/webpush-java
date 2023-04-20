@@ -1,32 +1,35 @@
 package nl.martijndwars.webpush.cli;
 
+import java.security.Security;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+
 import nl.martijndwars.webpush.cli.commands.GenerateKeyCommand;
 import nl.martijndwars.webpush.cli.commands.SendNotificationCommand;
 import nl.martijndwars.webpush.cli.handlers.GenerateKeyHandler;
 import nl.martijndwars.webpush.cli.handlers.SendNotificationHandler;
+
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import java.security.Security;
+public final class Cli {
 
-/**
- * Command-line interface
- */
-public class Cli {
     private static final String GENERATE_KEY = "generate-key";
     private static final String SEND_NOTIFICATION = "send-notification";
 
-    public static void main(String[] args) {
+    private Cli() {
+    }
+
+    public static void main(final String[] args) {
         Security.addProvider(new BouncyCastleProvider());
 
-        GenerateKeyCommand generateKeyCommand = new GenerateKeyCommand();
-        SendNotificationCommand sendNotificationCommand = new SendNotificationCommand();
+        final var generateKeyCommand = new GenerateKeyCommand();
+        final var sendNotificationCommand = new SendNotificationCommand();
 
-        JCommander jCommander = JCommander.newBuilder()
-                .addCommand(GENERATE_KEY, generateKeyCommand)
-                .addCommand(SEND_NOTIFICATION, sendNotificationCommand)
-                .build();
+        final var jCommander = JCommander.newBuilder()
+            .addCommand(GENERATE_KEY, generateKeyCommand)
+            .addCommand(SEND_NOTIFICATION, sendNotificationCommand)
+            .build();
 
         try {
             jCommander.parse(args);
@@ -39,10 +42,10 @@ public class Cli {
             } else {
                 jCommander.usage();
             }
-        } catch (ParameterException e) {
-            e.usage();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (final ParameterException exception) {
+            exception.usage();
+        } catch (final Exception exception) {
+            exception.printStackTrace();
         }
     }
 }

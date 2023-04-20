@@ -17,8 +17,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * @param userPublicKey The client's public key
  * @param userAuth The client's auth
  * @param payload An arbitrary payload
- * @param urgency Push Message Urgency <a href="https://tools.ietf.org/html/rfc8030#section-5.3">Push Message Urgency</a>
- * @param topic Push Message Topic <a href="https://tools.ietf.org/html/rfc8030#section-5.4">Replacing Push Messages</a>
+ * @param urgency <a href="https://tools.ietf.org/html/rfc8030#section-5.3">Push Message Urgency</a>
+ * @param topic <a href="https://tools.ietf.org/html/rfc8030#section-5.4">Replacing Push Messages</a>
  * @param ttl Time in seconds that the push message is retained by the push service
  */
 public record Notification(URI endpoint, ECPublicKey userPublicKey, byte[] userAuth, byte[] payload, Urgency urgency,
@@ -41,7 +41,7 @@ public record Notification(URI endpoint, ECPublicKey userPublicKey, byte[] userA
     }
 
     /**
-     * Detect if the notification is for a GCM-based subscription
+     * Detects if this {@code Notification} is for a GCM-based subscription.
      */
     public boolean isGcm() {
         return endpoint().toString().startsWith("https://android.googleapis.com/gcm/send");

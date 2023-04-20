@@ -94,7 +94,7 @@ First, make sure you add the BouncyCastle security provider:
 Security.addProvider(new BouncyCastleProvider());
 ```
 
-Then, create an instance of the push service, either `nl.martijndwars.webpush.PushService` for synchronous blocking HTTP calls, or `nl.martijndwars.webpush.PushAsyncService` for asynchronous non-blocking HTTP calls:
+Then, create an instance of the push service, either `nl.martijndwars.webpush.JdkHttpClientPushService` for synchronous blocking HTTP calls, or `nl.martijndwars.webpush.PushAsyncService` for asynchronous non-blocking HTTP calls:
 
 ```java
 PushService pushService = new PushService(...);

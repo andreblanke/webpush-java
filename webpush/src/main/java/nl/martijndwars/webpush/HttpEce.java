@@ -1,11 +1,5 @@
 package nl.martijndwars.webpush;
 
-import org.bouncycastle.crypto.digests.SHA256Digest;
-import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
-import org.bouncycastle.crypto.params.HKDFParameters;
-import org.bouncycastle.jce.interfaces.ECPrivateKey;
-import org.bouncycastle.jce.interfaces.ECPublicKey;
-
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -13,12 +7,19 @@ import java.nio.ByteBuffer;
 import java.security.*;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.Map;
 
+import org.bouncycastle.crypto.digests.SHA256Digest;
+import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
+import org.bouncycastle.crypto.params.HKDFParameters;
+import org.bouncycastle.jce.interfaces.ECPrivateKey;
+import org.bouncycastle.jce.interfaces.ECPublicKey;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
+
 import static javax.crypto.Cipher.DECRYPT_MODE;
 import static javax.crypto.Cipher.ENCRYPT_MODE;
+
 import static nl.martijndwars.webpush.Utils.*;
 
 // TODO: Support multiple records (not needed for Web Push)
@@ -32,7 +33,8 @@ import static nl.martijndwars.webpush.Utils.*;
  * [1] <a href="https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-01">...</a>
  * [2] <a href="https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-09">...</a>
  */
-public class HttpEce {
+public final class HttpEce {
+
     public static final int KEY_LENGTH = 16;
     public static final int SHA_256_LENGTH = 32;
     public static final int TAG_SIZE = 16;
@@ -43,11 +45,11 @@ public class HttpEce {
     private final Map<String, String> labels;
 
     public HttpEce() {
-        this(new HashMap<>(), new HashMap<>());
+        this(Map.of(), Map.of());
     }
 
-    public HttpEce(Map<String, KeyPair> keys, Map<String, String> labels) {
-        this.keys = keys;
+    public HttpEce(final Map<String, KeyPair> keys, final Map<String, String> labels) {
+        this.keys   = keys;
         this.labels = labels;
     }
 
@@ -57,15 +59,15 @@ public class HttpEce {
      * @param plaintext    Payload to encrypt.
      * @param salt       A random 16-byte buffer
      * @param privateKey A private key to encrypt this message with (Web Push: the local private key)
-     * @param keyid      An identifier for the local key. Only applies to AESGCM. For AES128GCM, the header contains the keyid.
+     * @param keyId      An identifier for the local key. Only applies to AESGCM. For AES128GCM, the header contains the keyId.
      * @param dh         An Elliptic curve Diffie-Hellman public privateKey on the P-256 curve (Web Push: the user's keys.p256dh)
      * @param authSecret An authentication secret (Web Push: the user's keys.auth)
      */
-    public byte[] encrypt(byte[] plaintext, byte[] salt, byte[] privateKey, String keyid, ECPublicKey dh,
+    public byte[] encrypt(byte[] plaintext, byte[] salt, byte[] privateKey, String keyId, ECPublicKey dh,
                           byte[] authSecret, Encoding version) throws GeneralSecurityException {
         log("encrypt", plaintext);
 
-        byte[][] keyAndNonce = deriveKeyAndNonce(salt, privateKey, keyid, dh, authSecret, version, ENCRYPT_MODE);
+        byte[][] keyAndNonce = deriveKeyAndNonce(salt, privateKey, keyId, dh, authSecret, version, ENCRYPT_MODE);
         byte[] key = keyAndNonce[0];
         byte[] nonce = keyAndNonce[1];
 
@@ -76,7 +78,7 @@ public class HttpEce {
 
         // For AES128GCM suffix {0x02}, for AESGCM prefix {0x00, 0x00}.
         if (version == Encoding.AES_128_GCM) {
-            byte[] header = buildHeader(salt, keyid);
+            byte[] header = buildHeader(salt, keyId);
             log("header", header);
 
             byte[] padding = new byte[] { 2 };
@@ -127,10 +129,10 @@ public class HttpEce {
         byte[] body = Arrays.copyOfRange(payload, 21 + keyIdLength, payload.length);
 
         return new byte[][] {
-                salt,
-                recordSize,
-                keyId,
-                body
+            salt,
+            recordSize,
+            keyId,
+            body
         };
     }
 
@@ -353,17 +355,16 @@ public class HttpEce {
     /**
      * Get the public key for the given keyid.
      */
-    private ECPublicKey getPublicKey(String keyid) {
-        return (ECPublicKey) keys.get(keyid).getPublic();
+    private ECPublicKey getPublicKey(String keyId) {
+        return (ECPublicKey) keys.get(keyId).getPublic();
     }
 
     /**
      * Get the private key for the given keyid.
      */
-    private ECPrivateKey getPrivateKey(String keyid) {
-        return (ECPrivateKey) keys.get(keyid).getPrivate();
+    private ECPrivateKey getPrivateKey(String keyId) {
+        return (ECPrivateKey) keys.get(keyId).getPrivate();
     }
-
 
     /**
      * Encode the public key as a byte array and prepend its length in two bytes.

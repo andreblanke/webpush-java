@@ -1,5 +1,11 @@
 package nl.martijndwars.webpush;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
+
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.interfaces.ECPrivateKey;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
@@ -11,15 +17,9 @@ import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.security.*;
-import java.security.spec.InvalidKeySpecException;
-import java.util.Base64;
-
 import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
 
-public class Utils {
+public final class Utils {
 
     public static final String CURVE = "prime256v1";
 

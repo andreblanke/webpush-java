@@ -176,9 +176,9 @@ public abstract class AbstractPushService implements PushService {
      * Generates the local (ephemeral) keys.
      */
     private static KeyPair generateLocalKeyPair() throws GeneralSecurityException {
-        final var parameterSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
+        final var parameterSpec = ECNamedCurveTable.getParameterSpec(Utils.CURVE);
 
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDH", BouncyCastleProvider.PROVIDER_NAME);
+        final var keyPairGenerator = KeyPairGenerator.getInstance("ECDH", BouncyCastleProvider.PROVIDER_NAME);
         keyPairGenerator.initialize(parameterSpec);
         return keyPairGenerator.generateKeyPair();
     }
