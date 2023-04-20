@@ -1,19 +1,22 @@
 package nl.martijndwars.webpush;
 
+import java.security.*;
+import java.util.Base64;
+import java.util.Map;
+
 import org.bouncycastle.jce.interfaces.ECPrivateKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.security.*;
-import java.util.Base64;
-import java.util.HashMap;
-
-import static nl.martijndwars.webpush.Encoding.AES_128_GCM;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
+import static nl.martijndwars.webpush.Encoding.AES_128_GCM;
+
 class HttpEceTest {
+
     @BeforeAll
     public static void addSecurityProvider() {
         Security.addProvider(new BouncyCastleProvider());
@@ -36,12 +39,10 @@ class HttpEceTest {
     }
 
     /**
-     * See https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-09#section-3.1
-     *
+     * See <a href="https://www.rfc-editor.org/rfc/rfc8188#section-3.1">3.1. Encryption of a Response</a>
+     * <p>
      * - Record size is 4096.
      * - Input keying material is identified by an empty string.
-     *
-     * @throws GeneralSecurityException
      */
     @Test
     public void testSampleEncryption() throws GeneralSecurityException {
@@ -64,16 +65,12 @@ class HttpEceTest {
         // Prepare the key map, which maps a keyid to a keypair.
         PrivateKey privateKey = Utils.loadPrivateKey(encodedKey);
         PublicKey publicKey = Utils.loadPublicKey((ECPrivateKey) privateKey);
-        KeyPair keyPair = new KeyPair(publicKey, privateKey);
 
-        HashMap<String, KeyPair> keys = new HashMap<>();
-        keys.put("", keyPair);
-
-        HashMap<String, String> labels = new HashMap<>();
-        labels.put("", "P-256");
+        final var keys   = Map.of("", new KeyPair(publicKey, privateKey));
+        final var labels = Map.of("", "P-256");
 
         // Run the encryption and decryption
-        HttpEce httpEce = new HttpEce(keys, labels);
+        final var httpEce = new HttpEce(keys, labels);
 
         byte[] plaintext = "I am the walrus".getBytes();
         byte[] salt = decode(encodedSalt);
@@ -84,12 +81,9 @@ class HttpEceTest {
         assertArrayEquals(plaintext, decrypted);
     }
 
+    // TODO: This test is disabled because the library does not deal with multiple records yet.
     /**
-     * See https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-09#section-3.2
-     *
-     * TODO: This test is disabled because the library does not deal with multiple records yet.
-     *
-     * @throws GeneralSecurityException
+     * See <a href="https://www.rfc-editor.org/rfc/rfc8188#section-3.2">3.2. Encryption with multiple Records</a>
      */
     @Test
     @Disabled
@@ -100,7 +94,8 @@ class HttpEceTest {
         byte[] salt = decode("uNCkWiNYzKTnBN9ji3-qWA");
         byte[] key = decode("BO3ZVPxUlnLORbVGMpbT1Q");
         byte[] actual = httpEce.encrypt(plaintext, salt, key, null, null, null, AES_128_GCM);
-        byte[] expected = decode("uNCkWiNYzKTnBN9ji3-qWAAAABkCYTHOG8chz_gnvgOqdGYovxyjuqRyJFjEDyoF1Fvkj6hQPdPHI51OEUKEpgz3SsLWIqS_uA");
+        byte[] expected = decode(
+            "uNCkWiNYzKTnBN9ji3-qWAAAABkCYTHOG8chz_gnvgOqdGYovxyjuqRyJFjEDyoF1Fvkj6hQPdPHI51OEUKEpgz3SsLWIqS_uA");
 
         assertArrayEquals(expected, actual);
     }

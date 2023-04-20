@@ -20,7 +20,9 @@ import java.util.Base64;
 import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
 
 public class Utils {
+
     public static final String CURVE = "prime256v1";
+
     public static final String ALGORITHM = "ECDH";
 
     /**

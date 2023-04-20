@@ -17,12 +17,9 @@ import java.io.OutputStreamWriter;
 import java.security.*;
 import java.util.Base64;
 
-import static nl.martijndwars.webpush.Utils.ALGORITHM;
-import static nl.martijndwars.webpush.Utils.CURVE;
-import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
-
 public class GenerateKeyHandler implements HandlerInterface {
-    private GenerateKeyCommand generateKeyCommand;
+
+    private final GenerateKeyCommand generateKeyCommand;
 
     public GenerateKeyHandler(GenerateKeyCommand generateKeyCommand) {
         this.generateKeyCommand = generateKeyCommand;
@@ -51,11 +48,6 @@ public class GenerateKeyHandler implements HandlerInterface {
 
     /**
      * Generate an EC keypair on the prime256v1 curve.
-     *
-     * @return
-     * @throws InvalidAlgorithmParameterException
-     * @throws NoSuchProviderException
-     * @throws NoSuchAlgorithmException
      */
     public KeyPair generateKeyPair() throws InvalidAlgorithmParameterException, NoSuchProviderException, NoSuchAlgorithmException {
         ECNamedCurveParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec(Utils.CURVE);
@@ -68,9 +60,6 @@ public class GenerateKeyHandler implements HandlerInterface {
 
     /**
      * Write the given key to the given file.
-     *
-     * @param key
-     * @param file
      */
     private void writeKey(Key key, File file) throws IOException {
         file.createNewFile();

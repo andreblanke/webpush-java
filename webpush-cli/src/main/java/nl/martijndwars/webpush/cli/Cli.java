@@ -33,12 +33,8 @@ public class Cli {
 
             if (jCommander.getParsedCommand() != null) {
                 switch (jCommander.getParsedCommand()) {
-                    case GENERATE_KEY:
-                        new GenerateKeyHandler(generateKeyCommand).run();
-                        break;
-                    case SEND_NOTIFICATION:
-                        new SendNotificationHandler(sendNotificationCommand).run();
-                        break;
+                    case GENERATE_KEY -> new GenerateKeyHandler(generateKeyCommand).run();
+                    case SEND_NOTIFICATION -> new SendNotificationHandler(sendNotificationCommand).run();
                 }
             } else {
                 jCommander.usage();

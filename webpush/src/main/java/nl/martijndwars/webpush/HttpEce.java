@@ -61,7 +61,8 @@ public class HttpEce {
      * @param dh         An Elliptic curve Diffie-Hellman public privateKey on the P-256 curve (Web Push: the user's keys.p256dh)
      * @param authSecret An authentication secret (Web Push: the user's keys.auth)
      */
-    public byte[] encrypt(byte[] plaintext, byte[] salt, byte[] privateKey, String keyid, ECPublicKey dh, byte[] authSecret, Encoding version) throws GeneralSecurityException {
+    public byte[] encrypt(byte[] plaintext, byte[] salt, byte[] privateKey, String keyid, ECPublicKey dh,
+                          byte[] authSecret, Encoding version) throws GeneralSecurityException {
         log("encrypt", plaintext);
 
         byte[][] keyAndNonce = deriveKeyAndNonce(salt, privateKey, keyid, dh, authSecret, version, ENCRYPT_MODE);
@@ -97,7 +98,8 @@ public class HttpEce {
      * @param salt    May be null when version is AES128GCM; the salt is extracted from the header.
      * @param version AES128GCM or AESGCM.
      */
-    public byte[] decrypt(byte[] payload, byte[] salt, byte[] key, String keyid, Encoding version) throws InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, InvalidAlgorithmParameterException, BadPaddingException, NoSuchProviderException, NoSuchPaddingException {
+    public byte[] decrypt(byte[] payload, byte[] salt, byte[] key, String keyid, Encoding version)
+            throws InvalidKeyException, NoSuchAlgorithmException, IllegalBlockSizeException, InvalidAlgorithmParameterException, BadPaddingException, NoSuchProviderException, NoSuchPaddingException {
         byte[] body;
 
         // Parse and strip the header
@@ -207,7 +209,8 @@ public class HttpEce {
         return okm;
     }
 
-    public byte[][] extractSecretAndContext(byte[] key, String keyId, ECPublicKey dh, byte[] authSecret) throws InvalidKeyException, NoSuchAlgorithmException {
+    public byte[][] extractSecretAndContext(byte[] key, String keyId, ECPublicKey dh, byte[] authSecret)
+            throws InvalidKeyException, NoSuchAlgorithmException {
         byte[] secret = null;
         byte[] context = null;
 
@@ -238,7 +241,8 @@ public class HttpEce {
         };
     }
 
-    public byte[][] deriveKeyAndNonce(byte[] salt, byte[] key, String keyId, ECPublicKey dh, byte[] authSecret, Encoding version, int mode) throws NoSuchAlgorithmException, InvalidKeyException {
+    public byte[][] deriveKeyAndNonce(byte[] salt, byte[] key, String keyId, ECPublicKey dh, byte[] authSecret,
+                                      Encoding version, int mode) throws NoSuchAlgorithmException, InvalidKeyException {
         byte[] secret;
         byte[] keyInfo;
         byte[] nonceInfo;
