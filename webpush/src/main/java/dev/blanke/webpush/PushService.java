@@ -1,5 +1,7 @@
 package dev.blanke.webpush;
 
+import dev.blanke.webpush.jwt.JwtFactory;
+
 import java.net.http.HttpResponse;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -56,6 +58,8 @@ public interface PushService extends AutoCloseable {
 
         protected String vapidSubject;
 
+        protected JwtFactory jwtFactory;
+
         abstract PushService build();
 
         public T withGcmApiKey(final String gcmApiKey) {
@@ -88,6 +92,11 @@ public interface PushService extends AutoCloseable {
 
         public T withVapidSubject(final String vapidSubject) {
             this.vapidSubject = vapidSubject;
+            return (T) this;
+        }
+
+        public T withJwtFactory(final JwtFactory jwtFactory) {
+            this.jwtFactory = jwtFactory;
             return (T) this;
         }
     }

@@ -1,5 +1,7 @@
 package dev.blanke.webpush;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
@@ -8,6 +10,8 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,10 +21,8 @@ import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import org.jose4j.jws.AlgorithmIdentifiers;
-import org.jose4j.jws.JsonWebSignature;
-import org.jose4j.jwt.JwtClaims;
-import org.jose4j.lang.JoseException;
+import dev.blanke.webpush.jwt.Jose4jJwtFactory;
+import dev.blanke.webpush.jwt.JwtFactory;
 
 public abstract class AbstractPushService implements PushService {
 
@@ -37,7 +39,11 @@ public abstract class AbstractPushService implements PushService {
 
     private final KeyPair vapidKeyPair;
 
+    private final JwtFactory jwtFactory;
+
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    private static final Logger LOGGER = System.getLogger(AbstractPushService.class.getName());
 
     public static final String SERVER_KEY_ID = "server-key-id";
 
@@ -47,6 +53,13 @@ public abstract class AbstractPushService implements PushService {
         this.gcmApiKey    = builder.gcmApiKey;
         this.vapidKeyPair = builder.vapidKeyPair;
         this.vapidSubject = builder.vapidSubject;
+
+        if (builder.jwtFactory == null) {
+            LOGGER.log(Level.WARNING,
+                "No JwtFactory was specified. Falling back to dev.blanke.webpush.jwt.Jose4jJwtFactory...");
+            builder.jwtFactory = new Jose4jJwtFactory();
+        }
+        this.jwtFactory = builder.jwtFactory;
     }
 
     @Override
@@ -54,7 +67,7 @@ public abstract class AbstractPushService implements PushService {
     }
 
     protected final HttpRequest prepareRequest(final Notification notification, final Encoding encoding)
-            throws GeneralSecurityException, JoseException, URISyntaxException {
+            throws GeneralSecurityException, URISyntaxException {
         if (isVapidEnabled() && !Utils.verifyKeyPair(getVapidPrivateKey(), getVapidPublicKey())) {
             throw new IllegalStateException("Public key and private key do not match.");
         }
@@ -109,28 +122,24 @@ public abstract class AbstractPushService implements PushService {
                 builder.uri(new URI(notification.endpoint().toString().replace("fcm/send", "wp")));
             }
 
-            final var claims = new JwtClaims();
-            claims.setAudience(notification.getOrigin());
-            claims.setExpirationTimeMinutesInTheFuture(12 * 60);
-            if (getVapidSubject() != null) {
-                claims.setSubject(getVapidSubject());
-            }
-
-            final var jws = new JsonWebSignature();
-            jws.setHeader("typ", "JWT");
-            jws.setHeader("alg", "ES256");
-            jws.setPayload(claims.toJson());
-            jws.setKey(getVapidPrivateKey());
-            jws.setAlgorithmHeaderValue(AlgorithmIdentifiers.ECDSA_USING_P256_CURVE_AND_SHA256);
-
-            byte[] pk = Utils.encode((ECPublicKey) getVapidPublicKey());
+            final var publicKey = Utils.encode((ECPublicKey) getVapidPublicKey());
+            final var token = jwtFactory.serialize(
+                Map.of(
+                    "typ", "JWT",
+                    "alg", "ES256"),
+                Map.of(
+                    "aud", notification.getOrigin(),
+                    "exp", Instant.now().plus(Duration.ofMinutes(20)).getEpochSecond(),
+                    "sub", getVapidSubject()),
+                getVapidPrivateKey());
 
             switch (encoding) {
                 case AES_128_GCM ->
-                    builder.header("Authorization", "vapid t=" + jws.getCompactSerialization() + ", k=" + Base64.getUrlEncoder().withoutPadding().encodeToString(pk));
-                case AES_GCM -> builder.header("Authorization", "WebPush " + jws.getCompactSerialization());
+                    builder.header("Authorization", "vapid t=%s, k=%s".formatted(
+                        token, Base64.getUrlEncoder().withoutPadding().encodeToString(publicKey)));
+                case AES_GCM -> builder.header("Authorization", "WebPush %s".formatted(token));
             }
-            cryptoKeyHeader.put("p256ecdsa", Base64.getUrlEncoder().encodeToString(pk));
+            cryptoKeyHeader.put("p256ecdsa", Base64.getUrlEncoder().encodeToString(publicKey));
         } else if (notification.isFcm() && getGcmApiKey() != null) {
             builder.header("Authorization", "key=" + getGcmApiKey());
         }
