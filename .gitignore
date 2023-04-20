@@ -1,9 +1,5 @@
-build/
-
 .idea/*
 !.idea/dictionaries
-
-.gradle/
 *.iml
+
 target/
-out/
