@@ -10,13 +10,4 @@ dependencies {
     implementation group: 'com.beust', name: 'jcommander', version: '1.81'
 }
 
-compileJava {
-    sourceCompatibility = 17
-    targetCompatibility = 17
-}
-
-compileTestJava {
-    sourceCompatibility = 17
-}
-
 mainClassName = 'nl.martijndwars.webpush.cli.Cli'

@@ -35,15 +35,6 @@ dependencies {
     testImplementation group: 'com.google.guava', name: 'guava', version: '31.0.1-jre'
 }
 
-compileJava {
-    sourceCompatibility = 17
-    targetCompatibility = 17
-}
-
-compileTestJava {
-    sourceCompatibility = 17
-}
-
 test {
     useJUnitPlatform()
 
