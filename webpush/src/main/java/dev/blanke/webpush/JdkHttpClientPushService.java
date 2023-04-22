@@ -2,6 +2,7 @@ package dev.blanke.webpush;
 
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandler;
 import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("unused")
@@ -16,14 +17,16 @@ public final class JdkHttpClientPushService extends AbstractPushService {
     }
 
     @Override
-    public HttpResponse<Void> send(final Notification notification, final Encoding encoding) throws Exception {
-        return httpClient.send(prepareRequest(notification, encoding), HttpResponse.BodyHandlers.discarding());
+    public <T> HttpResponse<T> send(final Notification notification, final Encoding encoding,
+                                    final BodyHandler<T> bodyHandler) throws Exception {
+        return httpClient.send(prepareRequest(notification, encoding), bodyHandler);
     }
 
     @Override
-    public CompletableFuture<HttpResponse<Void>> sendAsync(final Notification notification,
-                                                           final Encoding encoding) throws Exception {
-        return httpClient.sendAsync(prepareRequest(notification, encoding), HttpResponse.BodyHandlers.discarding());
+    public <T> CompletableFuture<HttpResponse<T>> sendAsync(final Notification notification,
+                                                            final Encoding encoding,
+                                                            final BodyHandler<T> bodyHandler) throws Exception {
+        return httpClient.sendAsync(prepareRequest(notification, encoding), bodyHandler);
     }
 
     public static final class Builder extends PushService.Builder<Builder> {

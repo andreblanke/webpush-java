@@ -3,6 +3,8 @@ package dev.blanke.webpush;
 import dev.blanke.webpush.jwt.JwtFactory;
 
 import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandler;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.interfaces.ECPrivateKey;
@@ -42,13 +44,23 @@ public interface PushService extends AutoCloseable {
         return send(notification, DEFAULT_ENCODING);
     }
 
-    HttpResponse<Void> send(Notification notification, Encoding encoding) throws Exception;
+    default HttpResponse<Void> send(Notification notification, Encoding encoding) throws Exception {
+        return send(notification, encoding, BodyHandlers.discarding());
+    }
+
+    <T> HttpResponse<T> send(Notification notification, Encoding encoding, BodyHandler<T> bodyHandler) throws Exception;
 
     default CompletableFuture<HttpResponse<Void>> sendAsync(final Notification notification) throws Exception {
         return sendAsync(notification, DEFAULT_ENCODING);
     }
 
-    CompletableFuture<HttpResponse<Void>> sendAsync(Notification notification, Encoding encoding) throws Exception;
+    default CompletableFuture<HttpResponse<Void>> sendAsync(Notification notification, Encoding encoding)
+            throws Exception {
+        return sendAsync(notification, encoding, BodyHandlers.discarding());
+    }
+
+    <T> CompletableFuture<HttpResponse<T>> sendAsync(Notification notification, Encoding encoding,
+                                                     BodyHandler<T> bodyHandler) throws Exception;
 
     @SuppressWarnings("unchecked")
     abstract class Builder<T extends Builder<T>> {

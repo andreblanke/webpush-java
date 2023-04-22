@@ -14,6 +14,7 @@ import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
 import org.bouncycastle.crypto.params.HKDFParameters;
 import org.bouncycastle.jce.interfaces.ECPrivateKey;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -72,7 +73,7 @@ public final class HttpEce {
         byte[] nonce = keyAndNonce[1];
 
         // Note: Cipher adds the tag to the end of the ciphertext
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", BouncyCastleProvider.PROVIDER_NAME);
         GCMParameterSpec params = new GCMParameterSpec(TAG_SIZE * 8, nonce);
         cipher.init(ENCRYPT_MODE, new SecretKeySpec(key, "AES"), params);
 
@@ -137,7 +138,7 @@ public final class HttpEce {
     }
 
     public byte[] decryptRecord(byte[] ciphertext, byte[] key, byte[] nonce, Encoding version) throws NoSuchPaddingException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", BouncyCastleProvider.PROVIDER_NAME);
         GCMParameterSpec params = new GCMParameterSpec(TAG_SIZE * 8, nonce);
         cipher.init(DECRYPT_MODE, new SecretKeySpec(key, "AES"), params);
 
@@ -181,7 +182,7 @@ public final class HttpEce {
     /**
      * Future versions might require a null-terminated info string?
      */
-    protected static byte[] buildInfo(String type, byte[] context) {
+    private static byte[] buildInfo(String type, byte[] context) {
         ByteBuffer buffer = ByteBuffer.allocate(19 + type.length() + context.length);
 
         buffer.put("Content-Encoding: ".getBytes(UTF_8), 0, 18);
@@ -195,7 +196,7 @@ public final class HttpEce {
     /**
      * Convenience method for computing the HMAC Key Derivation Function. The real work is offloaded to BouncyCastle.
      */
-    protected static byte[] hkdfExpand(byte[] ikm, byte[] salt, byte[] info, int length) {
+    private static byte[] hkdfExpand(byte[] ikm, byte[] salt, byte[] info, int length) {
         log("salt", salt);
         log("ikm", ikm);
         log("info", info);
