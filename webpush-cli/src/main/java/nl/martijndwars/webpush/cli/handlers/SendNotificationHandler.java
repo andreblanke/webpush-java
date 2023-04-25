@@ -7,7 +7,7 @@ import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription;
 import nl.martijndwars.webpush.cli.commands.SendNotificationCommand;
 
-public class SendNotificationHandler implements HandlerInterface {
+public class SendNotificationHandler implements Handler {
 
     private final SendNotificationCommand sendNotificationCommand;
 

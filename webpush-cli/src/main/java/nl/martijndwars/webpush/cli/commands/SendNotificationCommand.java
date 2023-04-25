@@ -2,6 +2,7 @@ package nl.martijndwars.webpush.cli.commands;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+
 import nl.martijndwars.webpush.Subscription;
 
 @Parameters(separators = "=", commandDescription = "Send a push notification")

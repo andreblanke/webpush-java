@@ -1,7 +1,12 @@
 package nl.martijndwars.webpush.cli.handlers;
 
-import nl.martijndwars.webpush.Utils;
-import nl.martijndwars.webpush.cli.commands.GenerateKeyCommand;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.security.*;
+import java.util.Base64;
+
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.interfaces.ECPrivateKey;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
@@ -10,14 +15,10 @@ import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.security.*;
-import java.util.Base64;
+import nl.martijndwars.webpush.Utils;
+import nl.martijndwars.webpush.cli.commands.GenerateKeyCommand;
 
-public class GenerateKeyHandler implements HandlerInterface {
+public class GenerateKeyHandler implements Handler {
 
     private final GenerateKeyCommand generateKeyCommand;
 
