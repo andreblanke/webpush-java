@@ -34,7 +34,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.0.0</version>
         <configuration>
-          <mainClass>dev.blanke.webpush.cli.Cli</mainClass>
+          <mainClass>nl.martijndwars.webpush.cli.Cli</mainClass>
         </configuration>
       </plugin>
     </plugins>
