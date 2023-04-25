@@ -1,3 +1,11 @@
+# 6.0.0
+
+* Target Java 17
+* No longer separate synchronous and asynchronous `PushService` implementations
+* Use `java.net.http.HttpClient` for default `PushService` instead of an external dependency
+* Introduce `JwtFactory` adapter interface to remove hard dependency on JOSE4j
+* Separate CLI and library modules
+
 # 5.1.1
 
 * Target Java 8 instead of Java 7.
