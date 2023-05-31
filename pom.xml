@@ -8,8 +8,13 @@
 
   <groupId>dev.blanke.webpush</groupId>
   <artifactId>webpush-project</artifactId>
-  <version>6.0.0-SNAPSHOT</version>
+  <version>6.0.0</version>
   <packaging>pom</packaging>
+
+  <name>webpush-java</name>
+  <description>A Web Push library with minimal dependencies for Java 17 and above. Supports payloads and VAPID.</description>
+  <url>https://github.com/andreblanke/webpush-java</url>
+  <inceptionYear>2023</inceptionYear>
 
   <modules>
     <module>webpush</module>
@@ -19,6 +24,41 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+
+  <licenses>
+    <license>
+      <name>MIT</name>
+      <url>https://opensource.org/license/mit/</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>andreblanke</id>
+      <name>Andre Blanke</name>
+      <url>https://github.com/andreblanke/</url>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/andreblanke/webpush-java.git</connection>
+    <developerConnection>scm:git:ssh://github.com/andreblanke/webpush-java.git</developerConnection>
+    <url>https://github.com/andreblanke/webpush-java</url>
+  </scm>
+
+  <distributionManagement>
+    <repository>
+      <id>ossrh</id>
+      <name>OSS Repository Hosting</name>
+      <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2</url>
+    </repository>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <name>OSS Repository Hosting</name>
+      <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
 
   <build>
     <pluginManagement>
@@ -38,44 +78,56 @@
         </plugin>
       </plugins>
     </pluginManagement>
-
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.4.0</version>
-        <executions>
-          <execution>
-            <id>attach-javadocs</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>3.2.1</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>jar-no-fork</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
   </build>
 
-  <distributionManagement>
-    <repository>
-      <id>github</id>
-      <url>https://maven.pkg.github.com/andreblanke/webpush-java</url>
-    </repository>
-  </distributionManagement>
+  <profiles>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.4.0</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>3.2.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>3.0.1</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>
