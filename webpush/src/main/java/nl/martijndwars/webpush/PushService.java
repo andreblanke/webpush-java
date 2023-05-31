@@ -97,7 +97,8 @@ public interface PushService extends AutoCloseable {
         }
 
         public T withVapidPublicKey(final ECPublicKey vapidPublicKey) {
-            vapidKeyPair = new KeyPair(vapidPublicKey, vapidKeyPair.getPrivate());
+            final var vapidPrivateKey = (vapidKeyPair != null) ? vapidKeyPair.getPrivate() : null;
+            vapidKeyPair = new KeyPair(vapidPublicKey, vapidPrivateKey);
             return (T) this;
         }
 
@@ -106,7 +107,8 @@ public interface PushService extends AutoCloseable {
         }
 
         public T withVapidPrivateKey(final ECPrivateKey vapidPrivateKey) {
-            vapidKeyPair = new KeyPair(vapidKeyPair.getPublic(), vapidPrivateKey);
+            final var vapidPublicKey = (vapidKeyPair != null) ? vapidKeyPair.getPublic() : null;
+            vapidKeyPair = new KeyPair(vapidPublicKey, vapidPrivateKey);
             return (T) this;
         }
 
