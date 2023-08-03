@@ -1,4 +1,4 @@
-package nl.martijndwars.webpush.jwt;
+package nl.martijndwars.webpush.jwt.jose4j;
 
 import java.security.interfaces.ECPrivateKey;
 import java.util.Map;
@@ -6,6 +6,8 @@ import java.util.Map;
 import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.lang.JoseException;
+
+import nl.martijndwars.webpush.jwt.JwtFactory;
 
 @SuppressWarnings("unused")
 public final class Jose4jJwtFactory implements JwtFactory {

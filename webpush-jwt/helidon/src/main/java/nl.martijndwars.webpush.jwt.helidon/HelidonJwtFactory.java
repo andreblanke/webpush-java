@@ -1,4 +1,4 @@
-package nl.martijndwars.webpush.jwt;
+package nl.martijndwars.webpush.jwt.helidon;
 
 import java.security.interfaces.ECPrivateKey;
 import java.util.Map;
@@ -6,6 +6,8 @@ import java.util.Map;
 import io.helidon.security.jwt.Jwt;
 import io.helidon.security.jwt.SignedJwt;
 import io.helidon.security.jwt.jwk.JwkEC;
+
+import nl.martijndwars.webpush.jwt.JwtFactory;
 
 @SuppressWarnings("unused")
 public final class HelidonJwtFactory implements JwtFactory {

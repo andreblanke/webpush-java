@@ -23,18 +23,19 @@
 
     <!-- JwtFactory implementations -->
     <dependency>
-      <groupId>org.bitbucket.b_c</groupId>
-      <artifactId>jose4j</artifactId>
-      <version>0.9.3</version>
+      <groupId>dev.blanke.webpush.jwt</groupId>
+      <artifactId>webpush-jwt-helidon</artifactId>
+      <version>6.0.0</version>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>io.helidon.security</groupId>
-      <artifactId>helidon-security-jwt</artifactId>
-      <version>3.1.2</version>
+      <groupId>dev.blanke.webpush.jwt</groupId>
+      <artifactId>webpush-jwt-jose4j</artifactId>
+      <version>6.0.0</version>
       <optional>true</optional>
     </dependency>
 
+    <!-- Test dependencies -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>

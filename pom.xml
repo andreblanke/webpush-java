@@ -19,6 +19,7 @@
   <modules>
     <module>webpush</module>
     <module>webpush-cli</module>
+    <module>webpush-jwt</module>
   </modules>
 
   <properties>
