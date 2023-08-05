@@ -8,6 +8,7 @@
     * Modularize library by adding `module-info.java` files to all artifacts
     * Add `META-INF/services/nl.martijndwars.webpush.jwt.JwtFactory` to discover `JwtFactory` implementations when the
       module path is not used
+* Update `org.bouncycastle:bcprov-jdk18on` to version 1.76 fixing CVE-2023-33201
 
 # 6.0.0
 
