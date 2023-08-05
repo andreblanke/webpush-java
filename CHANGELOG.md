@@ -1,3 +1,14 @@
+# 6.1.0
+
+* Rename `Jose4jJwtFactory` to `JOSE4jJwtFactory`
+* Move `HelidonJwtFactory` and `JOSE4jJwtFactory` into separate artifacts, `dev.blanke.webpush:webpush-jwt-helidon` and
+  `dev.blanke.webpush:webpush-jwt-jose4j`, respectively
+    * Move implementations into `nl.martijndwars.webpush.jwt.{helidon,jose4j}` package to avoid split packages
+* Use `ServiceLoader` to discover default `JwtFactory` implementation
+    * Modularize library by adding `module-info.java` files to all artifacts
+    * Add `META-INF/services/nl.martijndwars.webpush.jwt.JwtFactory` to discover `JwtFactory` implementations when the
+      module path is not used
+
 # 6.0.0
 
 * Target Java 17

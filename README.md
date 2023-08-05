@@ -7,7 +7,7 @@ A Web Push library with minimal dependencies for Java 17 and above. Supports pay
 For Gradle, add the following dependency to `build.gradle`:
 
 ```groovy
-compile group: 'dev.blanke.webpush', name: 'webpush', version: '6.0.0-SNAPSHOT'
+compile group: 'dev.blanke.webpush', name: 'webpush', version: '6.1.0'
 ```
 
 For Maven, add the following dependency to `pom.xml`:
@@ -16,7 +16,7 @@ For Maven, add the following dependency to `pom.xml`:
 <dependency>
     <groupId>dev.blanke.webpush</groupId>
     <artifactId>webpush</artifactId>
-    <version>6.0.0</version>
+    <version>6.1.0</version>
 </dependency>
 ```
 
@@ -27,21 +27,22 @@ are signed, and depending on how you package your application, you may need to i
 
 In addition to `dev.blanke.webpush:webpush`, an implementation of the `JwtFactory` interface is required. Currently,
 two implementations exist: `Jose4jJwtFactory` and `HelidonJwtFactory`, the prior being the default choice. Depending
-on which of the two classes is used, JOSE4j or Helidon Security JWT must be added as dependency:
+on which of the two classes should be used for creating and signing JWTs, one of the following dependencies must be
+added:
 
 ```xml
 <dependency>
-    <groupId>org.bitbucket.b_c</groupId>
-    <artifactId>jose4j</artifactId>
-    <version>0.9.3</version>
+    <groupId>dev.blanke.webpush.jwt</groupId>
+    <artifactId>webpush-jwt-helidon</artifactId>
+    <version>6.1.0</version>
 </dependency>
 ```
 
 ```xml
 <dependency>
-    <groupId>io.helidon.security</groupId>
-    <artifactId>helidon-security-jwt</artifactId>
-    <version>3.2.0</version>
+    <groupId>dev.blanke.webpush.jwt</groupId>
+    <artifactId>webpush-jwt-jose4j</artifactId>
+    <version>6.1.0</version>
 </dependency>
 ```
 
