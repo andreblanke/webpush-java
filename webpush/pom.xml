@@ -21,20 +21,6 @@
       <version>1.73</version>
     </dependency>
 
-    <!-- JwtFactory implementations -->
-    <dependency>
-      <groupId>dev.blanke.webpush.jwt</groupId>
-      <artifactId>webpush-jwt-helidon</artifactId>
-      <version>6.0.0</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>dev.blanke.webpush.jwt</groupId>
-      <artifactId>webpush-jwt-jose4j</artifactId>
-      <version>6.0.0</version>
-      <optional>true</optional>
-    </dependency>
-
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>

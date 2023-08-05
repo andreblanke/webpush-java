@@ -2,8 +2,6 @@ package nl.martijndwars.webpush;
 
 import nl.martijndwars.webpush.jwt.JwtFactory;
 
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
@@ -17,6 +15,7 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.StringJoiner;
 
 import org.bouncycastle.jce.ECNamedCurveTable;
@@ -44,8 +43,6 @@ public abstract class AbstractPushService implements PushService {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    private static final Logger LOGGER = System.getLogger(AbstractPushService.class.getName());
-
     public static final String SERVER_KEY_ID = "server-key-id";
 
     public static final String SERVER_KEY_CURVE = "P-256";
@@ -57,22 +54,11 @@ public abstract class AbstractPushService implements PushService {
         this.vapidKeyPair = builder.vapidKeyPair;
         this.vapidSubject = builder.vapidSubject;
 
-        if (builder.jwtFactory != null) {
-            this.jwtFactory = builder.jwtFactory;
-        } else {
-            final var fallbackClassName = "nl.martijndwars.webpush.jwt.jose4j.Jose4jJwtFactory";
-
-            LOGGER.log(Level.WARNING, "No JwtFactory was specified. Falling back to {}...", fallbackClassName);
-            try {
-                final var fallbackClass = Class.forName(fallbackClassName);
-                this.jwtFactory = (JwtFactory) fallbackClass.getConstructor().newInstance();
-            } catch (Exception exception) {
-                throw new RuntimeException(
-                    "Failed to instantiate %s. Explicitly provide a JwtFactory or ensure dev.blanke.webpush:webpush-jwt-jose4j is added as dependency."
-                        .formatted(fallbackClassName),
-                    exception);
-            }
-        }
+        this.jwtFactory = (builder.jwtFactory != null)
+            ? builder.jwtFactory
+            : ServiceLoader.load(JwtFactory.class).findFirst().orElseThrow(() -> new IllegalStateException(
+                "No JwtFactory provided. Please assign an implementation to PushService.Builder.jwtFactory or " +
+                "add webpush.jwt.helidon or webpush.jwt.jose4j to the module path."));
     }
 
     @Override
