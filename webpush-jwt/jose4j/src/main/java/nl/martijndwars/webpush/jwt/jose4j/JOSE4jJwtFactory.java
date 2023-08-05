@@ -10,7 +10,7 @@ import org.jose4j.lang.JoseException;
 import nl.martijndwars.webpush.jwt.JwtFactory;
 
 @SuppressWarnings("unused")
-public final class Jose4jJwtFactory implements JwtFactory {
+public final class JOSE4jJwtFactory implements JwtFactory {
 
     @Override
     public String serialize(final Map<String, Object> headerClaims, final Map<String, Object> payloadClaims,
