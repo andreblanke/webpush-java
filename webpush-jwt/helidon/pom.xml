@@ -9,7 +9,7 @@
   <parent>
     <groupId>dev.blanke.webpush.jwt</groupId>
     <artifactId>webpush-jwt</artifactId>
-    <version>6.1.0</version>
+    <version>6.1.1</version>
   </parent>
 
   <artifactId>webpush-jwt-helidon</artifactId>
@@ -18,7 +18,7 @@
     <dependency>
       <groupId>dev.blanke.webpush</groupId>
       <artifactId>webpush</artifactId>
-      <version>6.1.0</version>
+      <version>6.1.1</version>
     </dependency>
     <dependency>
       <groupId>io.helidon.security</groupId>

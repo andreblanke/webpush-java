@@ -9,7 +9,7 @@
   <parent>
     <groupId>dev.blanke.webpush</groupId>
     <artifactId>webpush-project</artifactId>
-    <version>6.1.0</version>
+    <version>6.1.1</version>
   </parent>
 
   <groupId>dev.blanke.webpush.jwt</groupId>
@@ -19,6 +19,7 @@
   <modules>
     <module>helidon</module>
     <module>jose4j</module>
+    <module>nimbus</module>
   </modules>
 
 </project>
