@@ -16,7 +16,7 @@ For Maven, add the following dependency to `pom.xml`:
 <dependency>
     <groupId>dev.blanke.webpush</groupId>
     <artifactId>webpush</artifactId>
-    <version>6.1.0</version>
+    <version>6.1.1</version>
 </dependency>
 ```
 
@@ -26,15 +26,14 @@ are signed, and depending on how you package your application, you may need to i
 ### `JwtFactory`
 
 In addition to `dev.blanke.webpush:webpush`, an implementation of the `JwtFactory` interface is required. Currently,
-two implementations exist: `Jose4jJwtFactory` and `HelidonJwtFactory`, the prior being the default choice. Depending
-on which of the two classes should be used for creating and signing JWTs, one of the following dependencies must be
-added:
+three implementations exist: `Jose4jJwtFactory`, `HelidonJwtFactory`, and `NimbusJwtFactory`. One of the following
+dependencies must be added depending on which JWT library should be used for creating, signing, and serializing JWTs:
 
 ```xml
 <dependency>
     <groupId>dev.blanke.webpush.jwt</groupId>
     <artifactId>webpush-jwt-helidon</artifactId>
-    <version>6.1.0</version>
+    <version>6.1.1</version>
 </dependency>
 ```
 
@@ -42,7 +41,15 @@ added:
 <dependency>
     <groupId>dev.blanke.webpush.jwt</groupId>
     <artifactId>webpush-jwt-jose4j</artifactId>
-    <version>6.1.0</version>
+    <version>6.1.1</version>
+</dependency>
+```
+
+```xml
+<dependency>
+    <groupId>dev.blanke.webpush.jwt</groupId>
+    <artifactId>webpush-jwt-nimbus</artifactId>
+    <version>6.1.1</version>
 </dependency>
 ```
 
