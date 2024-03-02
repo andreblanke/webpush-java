@@ -13,6 +13,7 @@
   </parent>
 
   <artifactId>webpush-jwt-nimbus</artifactId>
+  <version>6.1.2</version>
 
   <dependencies>
     <dependency>
@@ -23,7 +24,7 @@
     <dependency>
       <groupId>com.nimbusds</groupId>
       <artifactId>nimbus-jose-jwt</artifactId>
-      <version>9.35</version>
+      <version>9.37.3</version>
     </dependency>
   </dependencies>
 
