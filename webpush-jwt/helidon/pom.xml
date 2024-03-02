@@ -13,6 +13,7 @@
   </parent>
 
   <artifactId>webpush-jwt-helidon</artifactId>
+  <version>6.1.2</version>
 
   <dependencies>
     <dependency>
@@ -23,7 +24,7 @@
     <dependency>
       <groupId>io.helidon.security</groupId>
       <artifactId>helidon-security-jwt</artifactId>
-      <version>3.1.2</version>
+      <version>3.2.6</version>
     </dependency>
   </dependencies>
 
