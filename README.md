@@ -41,7 +41,7 @@ dependencies must be added depending on which JWT library should be used for cre
 <dependency>
     <groupId>dev.blanke.webpush.jwt</groupId>
     <artifactId>webpush-jwt-jose4j</artifactId>
-    <version>6.1.1</version>
+    <version>6.1.2</version>
 </dependency>
 ```
 
