@@ -13,6 +13,7 @@
   </parent>
 
   <artifactId>webpush</artifactId>
+  <version>6.1.2</version>
 
   <dependencies>
     <dependency>

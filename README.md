@@ -16,7 +16,7 @@ For Maven, add the following dependency to `pom.xml`:
 <dependency>
     <groupId>dev.blanke.webpush</groupId>
     <artifactId>webpush</artifactId>
-    <version>6.1.1</version>
+    <version>6.1.2</version>
 </dependency>
 ```
 
