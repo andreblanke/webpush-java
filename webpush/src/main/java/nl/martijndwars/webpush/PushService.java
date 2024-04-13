@@ -1,7 +1,5 @@
 package nl.martijndwars.webpush;
 
-import nl.martijndwars.webpush.jwt.JwtFactory;
-
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpResponse.BodyHandlers;
@@ -11,6 +9,9 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.time.Clock;
 import java.util.concurrent.CompletableFuture;
+
+import nl.martijndwars.webpush.jwt.JwtFactory;
+import nl.martijndwars.webpush.util.ECKeys;
 
 @SuppressWarnings("unused")
 public interface PushService extends AutoCloseable {
@@ -93,7 +94,7 @@ public interface PushService extends AutoCloseable {
         }
 
         public T withVapidPublicKey(final String encodedVapidPublicKey) throws GeneralSecurityException {
-            return withVapidPublicKey((ECPublicKey) Utils.loadPublicKey(encodedVapidPublicKey));
+            return withVapidPublicKey(ECKeys.loadPublicKey(encodedVapidPublicKey));
         }
 
         public T withVapidPublicKey(final ECPublicKey vapidPublicKey) {
@@ -103,7 +104,7 @@ public interface PushService extends AutoCloseable {
         }
 
         public T withVapidPrivateKey(final String encodedVapidPrivateKey) throws GeneralSecurityException {
-            return withVapidPrivateKey((ECPrivateKey) Utils.loadPrivateKey(encodedVapidPrivateKey));
+            return withVapidPrivateKey(ECKeys.loadPrivateKey(encodedVapidPrivateKey));
         }
 
         public T withVapidPrivateKey(final ECPrivateKey vapidPrivateKey) {

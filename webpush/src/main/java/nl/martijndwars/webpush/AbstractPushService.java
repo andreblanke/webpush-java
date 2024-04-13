@@ -1,15 +1,13 @@
 package nl.martijndwars.webpush;
 
-import nl.martijndwars.webpush.jwt.JwtFactory;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublisher;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
+import java.security.interfaces.ECPublicKey;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Base64;
@@ -18,9 +16,8 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.StringJoiner;
 
-import org.bouncycastle.jce.ECNamedCurveTable;
-import org.bouncycastle.jce.interfaces.ECPublicKey;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import nl.martijndwars.webpush.jwt.JwtFactory;
+import nl.martijndwars.webpush.util.ECKeys;
 
 public abstract class AbstractPushService implements PushService {
 
@@ -67,10 +64,6 @@ public abstract class AbstractPushService implements PushService {
 
     protected final HttpRequest prepareRequest(final Notification notification, final Encoding encoding)
             throws GeneralSecurityException, URISyntaxException {
-        if (isVapidEnabled() && !Utils.verifyKeyPair(getVapidPrivateKey(), getVapidPublicKey())) {
-            throw new IllegalStateException("Public key and private key do not match.");
-        }
-
         final Encrypted encrypted = encrypt(
             notification.payload(),
             notification.userPublicKey(),
@@ -101,7 +94,7 @@ public abstract class AbstractPushService implements PushService {
                 builder.header("Content-Encoding", "aesgcm");
                 builder.header("Encryption", "salt=" + Base64.getUrlEncoder().withoutPadding().encodeToString(encrypted.salt()));
 
-                byte[] dh = Utils.encode(encrypted.publicKey());
+                byte[] dh = ECKeys.encode(encrypted.publicKey());
                 cryptoKeyHeader.put("dh", Base64.getUrlEncoder().encodeToString(dh));
             }
 
@@ -121,7 +114,7 @@ public abstract class AbstractPushService implements PushService {
                 builder.uri(new URI(notification.endpoint().toString().replace("fcm/send", "wp")));
             }
 
-            final var publicKey = Utils.encode((ECPublicKey) getVapidPublicKey());
+            final var publicKey = ECKeys.encode(getVapidPublicKey());
             final var token = jwtFactory.serialize(
                 Map.of(
                     "typ", "JWT",
@@ -167,7 +160,7 @@ public abstract class AbstractPushService implements PushService {
      */
     private static Encrypted encrypt(final byte[] payload, final ECPublicKey userPublicKey, final byte[] userAuth,
                                      final Encoding encoding) throws GeneralSecurityException {
-        final KeyPair localKeyPair = generateLocalKeyPair();
+        final KeyPair localKeyPair = ECKeys.generateKeyPair();
 
         final var keys   = Map.of(SERVER_KEY_ID, localKeyPair);
         final var labels = Map.of(SERVER_KEY_ID, SERVER_KEY_CURVE);
@@ -178,17 +171,6 @@ public abstract class AbstractPushService implements PushService {
 
         final var ciphertext = httpEce.encrypt(payload, salt, null, SERVER_KEY_ID, userPublicKey, userAuth, encoding);
         return new Encrypted((ECPublicKey) localKeyPair.getPublic(), salt, ciphertext);
-    }
-
-    /**
-     * Generates the local (ephemeral) keys.
-     */
-    private static KeyPair generateLocalKeyPair() throws GeneralSecurityException {
-        final var parameterSpec = ECNamedCurveTable.getParameterSpec(Utils.CURVE);
-
-        final var keyPairGenerator = KeyPairGenerator.getInstance("ECDH", BouncyCastleProvider.PROVIDER_NAME);
-        keyPairGenerator.initialize(parameterSpec);
-        return keyPairGenerator.generateKeyPair();
     }
 
     @Override

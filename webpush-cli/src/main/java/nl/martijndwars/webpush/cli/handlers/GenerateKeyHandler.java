@@ -1,21 +1,17 @@
 package nl.martijndwars.webpush.cli.handlers;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.*;
+import java.security.interfaces.ECPublicKey;
+import java.security.interfaces.ECPrivateKey;
+import java.security.spec.InvalidParameterSpecException;
 import java.util.Base64;
 
-import org.bouncycastle.jce.ECNamedCurveTable;
-import org.bouncycastle.jce.interfaces.ECPrivateKey;
-import org.bouncycastle.jce.interfaces.ECPublicKey;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
-import org.bouncycastle.util.io.pem.PemObject;
-import org.bouncycastle.util.io.pem.PemWriter;
-
-import nl.martijndwars.webpush.Utils;
+import nl.martijndwars.webpush.util.ECKeys;
 import nl.martijndwars.webpush.cli.commands.GenerateKeyCommand;
 
 public class GenerateKeyHandler implements Handler {
@@ -27,48 +23,43 @@ public class GenerateKeyHandler implements Handler {
     }
 
     @Override
-    public void run() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
-        KeyPair keyPair = generateKeyPair();
+    public void run() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException, InvalidParameterSpecException {
+        KeyPair keyPair = ECKeys.generateKeyPair();
 
-        ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
+        ECPublicKey publicKey   = (ECPublicKey) keyPair.getPublic();
         ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
 
-        byte[] encodedPublicKey = Utils.encode(publicKey);
-        byte[] encodedPrivateKey = Utils.encode(privateKey);
-
-        if (generateKeyCommand.hasPublicKeyFile()) {
-            writeKey(keyPair.getPublic(), new File(generateKeyCommand.getPublicKeyFile()));
-        }
+        byte[] encodedPublicKey  = ECKeys.encode(publicKey);
+        byte[] encodedPrivateKey = ECKeys.encode(privateKey);
 
         System.out.println("PublicKey:");
         System.out.println(Base64.getUrlEncoder().encodeToString(encodedPublicKey));
 
         System.out.println("PrivateKey:");
         System.out.println(Base64.getUrlEncoder().encodeToString(encodedPrivateKey));
+
+        if (generateKeyCommand.hasPublicKeyFile())
+            writePem(keyPair.getPublic(), Paths.get(generateKeyCommand.getPublicKeyFile()));
     }
 
-    /**
-     * Generate an EC keypair on the prime256v1 curve.
-     */
-    public KeyPair generateKeyPair() throws InvalidAlgorithmParameterException, NoSuchProviderException, NoSuchAlgorithmException {
-        ECNamedCurveParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec(Utils.CURVE);
-
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(Utils.ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
-        keyPairGenerator.initialize(parameterSpec);
-
-        return keyPairGenerator.generateKeyPair();
+    private void writePem(final Key key, final Path path) throws IOException {
+        // Done similar to sun.security.tools.KeyTool.
+        try (var writer =
+                 Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+            writer.write("-----BEGIN Key-----\n");
+            // Use line wrapping at 64 characters similar to how Bouncy Castle's PemWriter used to.
+            writeWrapped(writer, Base64.getEncoder().encodeToString(key.getEncoded()), 64);
+            writer.write("-----END Key-----\n");
+        }
     }
 
-    /**
-     * Write the given key to the given file.
-     */
-    private void writeKey(Key key, File file) throws IOException {
-        file.createNewFile();
-
-        try (PemWriter pemWriter = new PemWriter(new OutputStreamWriter(new FileOutputStream(file)))) {
-            PemObject pemObject = new PemObject("Key", key.getEncoded());
-
-            pemWriter.writeObject(pemObject);
+    @SuppressWarnings("SameParameterValue")
+    private static void writeWrapped(final Writer writer, final String text, final int maxLineLength)
+            throws IOException {
+        for (int beginIndex = 0; beginIndex < text.length(); beginIndex += maxLineLength) {
+            final int endIndex = Math.min(text.length(), beginIndex + maxLineLength);
+            writer.write(text.substring(beginIndex, endIndex));
+            writer.write('\n');
         }
     }
 }

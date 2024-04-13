@@ -5,10 +5,12 @@ import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PublicKey;
+import java.security.interfaces.ECPublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.InvalidParameterSpecException;
 import java.util.Base64;
 
-import org.bouncycastle.jce.interfaces.ECPublicKey;
+import nl.martijndwars.webpush.util.ECKeys;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -123,14 +125,14 @@ public record Notification(URI endpoint, ECPublicKey userPublicKey, byte[] userA
         }
 
         public Builder userPublicKey(final String publicKey)
-                throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
-            this.userPublicKey = (ECPublicKey) Utils.loadPublicKey(publicKey);
+                throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidParameterSpecException {
+            this.userPublicKey = ECKeys.loadPublicKey(publicKey);
             return this;
         }
 
         public Builder userPublicKey(final byte[] publicKey)
-                throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
-            this.userPublicKey = (ECPublicKey) Utils.loadPublicKey(publicKey);
+                throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidParameterSpecException {
+            this.userPublicKey = ECKeys.loadPublicKey(publicKey);
             return this;
         }
 
@@ -170,7 +172,7 @@ public record Notification(URI endpoint, ECPublicKey userPublicKey, byte[] userA
         }
 
         public Builder subscription(final Subscription subscription)
-                throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException {
+                throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException, InvalidParameterSpecException {
             return endpoint(subscription.endpoint())
                 .userPublicKey(subscription.keys().p256dh())
                 .userAuth(subscription.keys().auth());

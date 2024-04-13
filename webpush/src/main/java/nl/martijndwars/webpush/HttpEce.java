@@ -5,23 +5,21 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
 import java.security.*;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map;
 
-import org.bouncycastle.crypto.digests.SHA256Digest;
-import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
-import org.bouncycastle.crypto.params.HKDFParameters;
-import org.bouncycastle.jce.interfaces.ECPrivateKey;
-import org.bouncycastle.jce.interfaces.ECPublicKey;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import at.favre.lib.hkdf.HKDF;
+import nl.martijndwars.webpush.util.ECKeys;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import static javax.crypto.Cipher.DECRYPT_MODE;
 import static javax.crypto.Cipher.ENCRYPT_MODE;
 
-import static nl.martijndwars.webpush.Utils.*;
+import static nl.martijndwars.webpush.HttpEce.Util.*;
 
 // TODO: Support multiple records (not needed for Web Push)
 /**
@@ -73,7 +71,7 @@ public final class HttpEce {
         byte[] nonce = keyAndNonce[1];
 
         // Note: Cipher adds the tag to the end of the ciphertext
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", BouncyCastleProvider.PROVIDER_NAME);
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         GCMParameterSpec params = new GCMParameterSpec(TAG_SIZE * 8, nonce);
         cipher.init(ENCRYPT_MODE, new SecretKeySpec(key, "AES"), params);
 
@@ -137,8 +135,8 @@ public final class HttpEce {
         };
     }
 
-    public byte[] decryptRecord(byte[] ciphertext, byte[] key, byte[] nonce, Encoding version) throws NoSuchPaddingException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", BouncyCastleProvider.PROVIDER_NAME);
+    public byte[] decryptRecord(byte[] ciphertext, byte[] key, byte[] nonce, Encoding version) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         GCMParameterSpec params = new GCMParameterSpec(TAG_SIZE * 8, nonce);
         cipher.init(DECRYPT_MODE, new SecretKeySpec(key, "AES"), params);
 
@@ -166,14 +164,14 @@ public final class HttpEce {
         if (keyid == null) {
             keyIdBytes = new byte[0];
         } else {
-            keyIdBytes = encode(getPublicKey(keyid));
+            keyIdBytes = ECKeys.encode(getPublicKey(keyid));
         }
 
         if (keyIdBytes.length > 255) {
             throw new IllegalArgumentException("They keyid is too large.");
         }
 
-        byte[] rs = toByteArray(4096, 4);
+        byte[] rs = convertToByteArray(4096, 4);
         byte[] idlen = new byte[] { (byte) keyIdBytes.length };
 
         return concat(salt, rs, idlen, keyIdBytes);
@@ -194,21 +192,17 @@ public final class HttpEce {
     }
 
     /**
-     * Convenience method for computing the HMAC Key Derivation Function. The real work is offloaded to BouncyCastle.
+     * Convenience method for computing the HMAC Key Derivation Function. The real work is offloaded to
+     * at.favre.lib:hkdf.
      */
     private static byte[] hkdfExpand(byte[] ikm, byte[] salt, byte[] info, int length) {
         log("salt", salt);
         log("ikm", ikm);
         log("info", info);
 
-        HKDFBytesGenerator hkdf = new HKDFBytesGenerator(new SHA256Digest());
-        hkdf.init(new HKDFParameters(ikm, salt, info));
-
-        byte[] okm = new byte[length];
-        hkdf.generateBytes(okm, 0, length);
-
+        final var hkdf = HKDF.fromHmacSha256();
+        final var okm  = hkdf.extractAndExpand(salt, ikm, info, length);
         log("expand", okm);
-
         return okm;
     }
 
@@ -292,7 +286,7 @@ public final class HttpEce {
                 throw new IllegalArgumentException("No saved key for keyid '" + keyId + "'.");
             }
 
-            return encode((ECPublicKey) keyPair.getPublic());
+            return ECKeys.encode((ECPublicKey) keyPair.getPublic());
         }
 
         return webpushSecret(keyId, dh, authSecret, mode);
@@ -320,16 +314,16 @@ public final class HttpEce {
             throw new IllegalArgumentException("Unsupported mode: " + mode);
         }
 
-        log("remote pubkey", encode(remotePubKey));
-        log("sender pubkey", encode(senderPubKey));
-        log("receiver pubkey", encode(receiverPubKey));
+        log("remote pubkey", ECKeys.encode(remotePubKey));
+        log("sender pubkey", ECKeys.encode(senderPubKey));
+        log("receiver pubkey", ECKeys.encode(receiverPubKey));
 
         KeyAgreement keyAgreement = KeyAgreement.getInstance("ECDH");
         keyAgreement.init(getPrivateKey(keyId));
         keyAgreement.doPhase(remotePubKey, true);
 
         byte[] ikm = keyAgreement.generateSecret();
-        byte[] info = concat(WEB_PUSH_INFO.getBytes(), encode(receiverPubKey), encode(senderPubKey));
+        byte[] info = concat(WEB_PUSH_INFO.getBytes(), ECKeys.encode(receiverPubKey), ECKeys.encode(senderPubKey));
 
         return hkdfExpand(ikm, authSecret, info, SHA_256_LENGTH);
     }
@@ -371,7 +365,7 @@ public final class HttpEce {
      * Encode the public key as a byte array and prepend its length in two bytes.
      */
     private static byte[] lengthPrefix(ECPublicKey publicKey) {
-        byte[] bytes = encode(publicKey);
+        byte[] bytes = ECKeys.encode(publicKey);
 
         return concat(intToBytes(bytes.length), bytes);
     }
@@ -408,5 +402,35 @@ public final class HttpEce {
         }
 
         return array;
+    }
+
+    static final class Util {
+
+        private Util() {
+        }
+
+        static byte[] concat(final byte[]... arrays) {
+            final byte[] concat = new byte[combinedLength(arrays)];
+
+            int offset = 0;
+            for (byte[] array : arrays) {
+                System.arraycopy(array, 0, concat, offset, array.length);
+                offset += array.length;
+            }
+            return concat;
+        }
+
+        static int combinedLength(final byte[]... arrays) {
+            int totalLength = 0;
+            for (byte[] array : arrays) {
+                totalLength += array.length;
+            }
+            return totalLength;
+        }
+
+        @SuppressWarnings("SameParameterValue")
+        static byte[] convertToByteArray(final int value, final int size) {
+            return ByteBuffer.allocate(size).putInt(value).array();
+        }
     }
 }

@@ -4,23 +4,16 @@ import java.security.*;
 import java.util.Base64;
 import java.util.Map;
 
-import org.bouncycastle.jce.interfaces.ECPrivateKey;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
+import nl.martijndwars.webpush.util.ECKeys;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import static nl.martijndwars.webpush.Encoding.AES_128_GCM;
 
 final class HttpEceTest {
-
-    @BeforeAll
-    public static void addSecurityProvider() {
-        Security.addProvider(new BouncyCastleProvider());
-    }
 
     private byte[] decode(String s) {
         return Base64.getUrlDecoder().decode(s);
@@ -59,12 +52,14 @@ final class HttpEceTest {
 
     @Test
     public void testSampleEncryptDecrypt() throws GeneralSecurityException {
-        String encodedKey = "yqdlZ-tYemfogSmv7Ws5PQ";
+        String encodedPrivateKey = "yqdlZ-tYemfogSmv7Ws5PQ";
+        // Can no longer be simply derived from the encodedPrivateKey with plain JCA functionality.
+        String encodedPublicKey = "BERIZW3tEwt3atwS7-oDtzs-ryp6Ap9MfsSMwWqPSksROPcAOgu7FXVqcMX3khhAiTnZYDSNCSDDFW8GkxxtAVE=";
         String encodedSalt = "I1BsxtFttlv3u_Oo94xnmw";
 
         // Prepare the key map, which maps a keyid to a keypair.
-        PrivateKey privateKey = Utils.loadPrivateKey(encodedKey);
-        PublicKey publicKey = Utils.loadPublicKey((ECPrivateKey) privateKey);
+        PrivateKey privateKey = ECKeys.loadPrivateKey(encodedPrivateKey);
+        PublicKey publicKey = ECKeys.loadPublicKey(encodedPublicKey);
 
         final var keys   = Map.of("", new KeyPair(publicKey, privateKey));
         final var labels = Map.of("", "P-256");
@@ -74,7 +69,7 @@ final class HttpEceTest {
 
         byte[] plaintext = "I am the walrus".getBytes();
         byte[] salt = decode(encodedSalt);
-        byte[] key = decode(encodedKey);
+        byte[] key = decode(encodedPrivateKey);
         byte[] ciphertext = httpEce.encrypt(plaintext, salt, key, null, null, null, AES_128_GCM);
         byte[] decrypted = httpEce.decrypt(ciphertext, null, key, null, AES_128_GCM);
 

@@ -1,7 +1,5 @@
 package nl.martijndwars.webpush.cli;
 
-import java.security.Security;
-
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
@@ -9,8 +7,6 @@ import nl.martijndwars.webpush.cli.commands.GenerateKeyCommand;
 import nl.martijndwars.webpush.cli.commands.SendNotificationCommand;
 import nl.martijndwars.webpush.cli.handlers.GenerateKeyHandler;
 import nl.martijndwars.webpush.cli.handlers.SendNotificationHandler;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public final class Cli {
 
@@ -21,8 +17,6 @@ public final class Cli {
     }
 
     public static void main(final String[] args) {
-        Security.addProvider(new BouncyCastleProvider());
-
         final var generateKeyCommand = new GenerateKeyCommand();
         final var sendNotificationCommand = new SendNotificationCommand();
 

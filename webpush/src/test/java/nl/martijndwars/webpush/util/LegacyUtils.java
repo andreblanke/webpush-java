@@ -1,4 +1,4 @@
-package nl.martijndwars.webpush;
+package nl.martijndwars.webpush.util;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -19,7 +19,7 @@ import org.bouncycastle.util.BigIntegers;
 
 import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
 
-public final class Utils {
+public final class LegacyUtils {
 
     public static final String CURVE = "prime256v1";
 
