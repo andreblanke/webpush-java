@@ -5,7 +5,7 @@ module webpush {
 
     exports nl.martijndwars.webpush;
     exports nl.martijndwars.webpush.jwt;
-    exports nl.martijndwars.webpush.util to webpush.cli;
+    exports nl.martijndwars.webpush.util;
 
     uses nl.martijndwars.webpush.jwt.JwtFactory;
 }
