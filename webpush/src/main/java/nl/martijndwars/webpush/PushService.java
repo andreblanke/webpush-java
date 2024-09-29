@@ -38,7 +38,9 @@ public interface PushService extends AutoCloseable {
         return (vapidKeyPair.getPublic() != null) && (vapidKeyPair.getPrivate() != null);
     }
 
-    String getVapidSubject();
+    default String getVapidSubject() {
+        return "";
+    };
 
     default HttpResponse<Void> send(final Notification notification) throws Exception {
         return send(notification, DEFAULT_ENCODING);
