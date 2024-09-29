@@ -122,14 +122,19 @@ public abstract class AbstractPushService implements PushService {
             }
 
             final var publicKey = Utils.encode((ECPublicKey) getVapidPublicKey());
+
+            final var payloadClaims = new HashMap<String, Object>();
+            payloadClaims.put("aud", notification.getOrigin());
+            payloadClaims.put("exp", clock.instant().plus(Duration.ofMinutes(20)).getEpochSecond());
+            if (getVapidSubject() != null) {
+                payloadClaims.put("sub", getVapidSubject());
+            }
+
             final var token = jwtFactory.serialize(
                 Map.of(
                     "typ", "JWT",
                     "alg", "ES256"),
-                Map.of(
-                    "aud", notification.getOrigin(),
-                    "exp", clock.instant().plus(Duration.ofMinutes(20)).getEpochSecond(),
-                    "sub", getVapidSubject()),
+                payloadClaims,
                 getVapidPrivateKey());
 
             switch (encoding) {
