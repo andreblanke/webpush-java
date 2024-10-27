@@ -7,7 +7,7 @@ A Web Push library with minimal dependencies for Java 17 and above. Supports pay
 For Gradle, add the following dependency to `build.gradle`:
 
 ```groovy
-compile group: 'dev.blanke.webpush', name: 'webpush', version: '6.1.0'
+compile group: 'dev.blanke.webpush', name: 'webpush', version: '6.1.3'
 ```
 
 For Maven, add the following dependency to `pom.xml`:
@@ -16,7 +16,7 @@ For Maven, add the following dependency to `pom.xml`:
 <dependency>
     <groupId>dev.blanke.webpush</groupId>
     <artifactId>webpush</artifactId>
-    <version>6.1.2</version>
+    <version>6.1.3</version>
 </dependency>
 ```
 
