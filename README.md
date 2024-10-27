@@ -2,6 +2,9 @@
 
 A Web Push library with minimal dependencies for Java 17 and above. Supports payloads and VAPID.
 
+> [!IMPORTANT]
+> This fork is no longer actively being maintained since I have switched to using [interaso/webpush](https://github.com/interaso/webpush) instead. The latter is backed by a company, better tested, and has no dependencies apart from the Kotlin standard library, so I would advise using it instead of webpush-java.
+
 ## Installation
 
 For Gradle, add the following dependency to `build.gradle`:
